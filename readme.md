@@ -7,5 +7,24 @@
    - [ ] Add Item to Room
    - [ ] Add Self to Item
    - [ ] Pull down Current Room State
-- [ ] Create Rooms with array of users, each with their own websocket address, and array of items
-- [ ] Auto delete rooms after everyone has left or no change in 24 hours
+- [ ] Create Rooms
+   - [ ] Room ID
+   - [ ] User List
+   - [ ] Item List
+   - [ ] State Channel
+   - [ ] Tip
+   - [ ] Tax
+- [ ] Create Users
+   - [ ] User ID
+   - [ ] Name
+   - [ ] WebSocket Connection
+   - [ ] Tip Share
+   - [ ] Tax Share
+- [ ] Create Items
+   - [ ] Item ID
+   - [ ] Item Name
+   - [ ] Item Price
+   - [ ] Item Discount
+- [ ] Delete rooms
+   - [ ] No Users
+   - [ ] No Activity for 4 Hours
