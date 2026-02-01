@@ -1,4 +1,4 @@
-{$DOMAIN:localhost} {
+{{DOMAIN}} {
     encode zstd gzip
     tls {{TLS_DIRECTIVE}}
 

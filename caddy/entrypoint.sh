@@ -3,6 +3,7 @@ set -e
 
 TLS_MODE=${TLS_MODE:-local}
 TLS_DIRECTIVE="internal"
+DOMAIN=${DOMAIN:-localhost}
 
 case "$TLS_MODE" in
   letsencrypt)
@@ -21,6 +22,6 @@ case "$TLS_MODE" in
     ;;
  esac
 
-sed "s/{{TLS_DIRECTIVE}}/${TLS_DIRECTIVE}/" /etc/caddy/Caddyfile.template > /etc/caddy/Caddyfile
+sed -e "s/{{TLS_DIRECTIVE}}/${TLS_DIRECTIVE}/" -e "s/{{DOMAIN}}/${DOMAIN}/" /etc/caddy/Caddyfile.template > /etc/caddy/Caddyfile
 
 exec caddy run --config /etc/caddy/Caddyfile --adapter caddyfile

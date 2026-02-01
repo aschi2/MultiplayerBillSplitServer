@@ -85,11 +85,23 @@ func (s *Server) handleCreateRoom(w http.ResponseWriter, r *http.Request) {
 		Name:      req.Name,
 		Initials:  initials(req.Name),
 		ColorSeed: colorSeed(roomCode, userID),
+		Present:   true,
 		UpdatedAt: time.Now().UnixMilli(),
 	}
 	room.Participants[userID] = &participant
 	ctx := context.Background()
 	s.store.SaveSnapshot(ctx, roomCode, room, 0)
+	op := crdt.Op{
+		ID:        uuid.NewString(),
+		ActorID:   userID,
+		Kind:      "set_participant",
+		Timestamp: time.Now().UnixMilli(),
+	}
+	payload, _ := json.Marshal(crdt.ParticipantPayload{Participant: participant})
+	op.Payload = payload
+	seq, _ := s.store.AppendOp(ctx, roomCode, op)
+	s.hub.broadcast(roomCode, map[string]any{"type": "op", "seq": seq, "op": op})
+
 	joinToken := s.signJoinToken(roomCode, userID)
 	writeJSON(w, CreateRoomResponse{RoomCode: roomCode, UserID: userID, JoinToken: joinToken})
 }
@@ -125,21 +137,50 @@ func (s *Server) handleJoinRoom(w http.ResponseWriter, r *http.Request) {
 	}
 	userID := req.UserID
 	if userID == "" {
-		userID = uuid.NewString()
+		// reuse participant if same name exists
+		for id, p := range room.Participants {
+			if strings.EqualFold(p.Name, req.Name) {
+				userID = id
+				break
+			}
+		}
+		if userID == "" {
+			userID = uuid.NewString()
+		}
 	}
 	if req.Token != "" && !s.verifyJoinToken(req.RoomCode, userID, req.Token) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	participant := crdt.Participant{
-		ID:        userID,
-		Name:      req.Name,
-		Initials:  initials(req.Name),
-		ColorSeed: colorSeed(req.RoomCode, userID),
-		UpdatedAt: time.Now().UnixMilli(),
+	var participant crdt.Participant
+	if existing, ok := room.Participants[userID]; ok {
+		participant = *existing
+		participant.Name = req.Name
+		participant.Present = true
+		participant.UpdatedAt = time.Now().UnixMilli()
+	} else {
+		participant = crdt.Participant{
+			ID:        userID,
+			Name:      req.Name,
+			Initials:  initials(req.Name),
+			ColorSeed: colorSeed(req.RoomCode, userID),
+			Present:   true,
+			UpdatedAt: time.Now().UnixMilli(),
+		}
 	}
 	room.Participants[userID] = &participant
 	s.store.SaveSnapshot(ctx, req.RoomCode, room, seq)
+	op := crdt.Op{
+		ID:        uuid.NewString(),
+		ActorID:   userID,
+		Kind:      "set_participant",
+		Timestamp: time.Now().UnixMilli(),
+	}
+	payload, _ := json.Marshal(crdt.ParticipantPayload{Participant: participant})
+	op.Payload = payload
+	newSeq, _ := s.store.AppendOp(ctx, req.RoomCode, op)
+	s.hub.broadcast(req.RoomCode, map[string]any{"type": "op", "seq": newSeq, "op": op})
+
 	joinToken := s.signJoinToken(req.RoomCode, userID)
 	writeJSON(w, JoinRoomResponse{RoomCode: req.RoomCode, UserID: userID, JoinToken: joinToken})
 }
@@ -154,7 +195,7 @@ func (s *Server) handleReceiptParse(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, map[string]any{"error": "OPENAI_API_KEY not configured"})
 		return
 	}
-	file, _, err := r.FormFile("file")
+	file, header, err := r.FormFile("file")
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -165,7 +206,22 @@ func (s *Server) handleReceiptParse(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	result, err := callOpenAIReceiptParse(r.Context(), s.config.OpenAIKey, data)
+	contentType := header.Header.Get("Content-Type")
+	if contentType == "" {
+		contentType = http.DetectContentType(data)
+	}
+	if !strings.HasPrefix(contentType, "image/") {
+		w.WriteHeader(http.StatusBadRequest)
+		writeJSON(w, map[string]any{"error": "Unsupported file type. Please upload an image."})
+		return
+	}
+	switch contentType {
+	case "image/heic", "image/heif":
+		w.WriteHeader(http.StatusBadRequest)
+		writeJSON(w, map[string]any{"error": "HEIC images aren't supported yet. Please upload a JPEG or PNG."})
+		return
+	}
+	result, err := callOpenAIReceiptParse(r.Context(), s.config.OpenAIKey, data, contentType)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		writeJSON(w, map[string]any{"error": err.Error()})

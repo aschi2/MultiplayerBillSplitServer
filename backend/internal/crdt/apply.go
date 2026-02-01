@@ -28,6 +28,10 @@ type TaxTipPayload struct {
 	TipCents int `json:"tip_cents"`
 }
 
+type RoomPayload struct {
+	Name string `json:"name"`
+}
+
 func ApplyOp(doc *RoomDoc, op Op) {
 	if doc == nil {
 		return
@@ -80,6 +84,15 @@ func ApplyOp(doc *RoomDoc, op Op) {
 			}
 		}
 		doc.Participants[participant.ID] = &participant
+	case "remove_participant":
+		var payload RemovePayload
+		if json.Unmarshal(op.Payload, &payload) != nil {
+			return
+		}
+		if payload.ID == "" {
+			return
+		}
+		delete(doc.Participants, payload.ID)
 	case "assign_item":
 		var payload AssignPayload
 		if json.Unmarshal(op.Payload, &payload) != nil {
@@ -101,6 +114,16 @@ func ApplyOp(doc *RoomDoc, op Op) {
 		}
 		doc.TaxCents = payload.TaxCents
 		doc.TipCents = payload.TipCents
+		doc.UpdatedAt = op.Timestamp
+	case "set_room_name":
+		var payload RoomPayload
+		if json.Unmarshal(op.Payload, &payload) != nil {
+			return
+		}
+		if payload.Name == "" {
+			return
+		}
+		doc.Name = payload.Name
 		doc.UpdatedAt = op.Timestamp
 	}
 }

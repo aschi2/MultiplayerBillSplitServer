@@ -3,6 +3,7 @@ export type Participant = {
   name: string;
   initials: string;
   colorSeed: string;
+  present: boolean;
 };
 
 export type Item = {
@@ -14,6 +15,7 @@ export type Item = {
   discount_cents: number;
   discount_percent: number;
   assigned: Record<string, boolean>;
+  raw_text?: string;
 };
 
 export type RoomDoc = {

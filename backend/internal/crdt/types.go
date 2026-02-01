@@ -37,6 +37,7 @@ type Participant struct {
 	Name      string `json:"name"`
 	Initials  string `json:"initials"`
 	ColorSeed string `json:"color_seed"`
+	Present   bool   `json:"present"`
 	UpdatedAt int64  `json:"updated_at"`
 }
 

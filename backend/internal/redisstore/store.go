@@ -86,6 +86,15 @@ func (s *Store) AppendOp(ctx context.Context, roomID string, op crdt.Op) (int64,
 	return seq, nil
 }
 
+// CurrentSeq returns the latest sequence value for a room (or 0 if missing).
+func (s *Store) CurrentSeq(ctx context.Context, roomID string) (int64, error) {
+	val, err := s.Client.Get(ctx, s.seqKey(roomID)).Int64()
+	if err == redis.Nil {
+		return 0, nil
+	}
+	return val, err
+}
+
 func (s *Store) LoadOps(ctx context.Context, roomID string, fromSeq int64) ([]crdt.Op, error) {
 	values, err := s.Client.LRange(ctx, s.opsKey(roomID), 0, -1).Result()
 	if err == redis.Nil {
@@ -97,8 +106,8 @@ func (s *Store) LoadOps(ctx context.Context, roomID string, fromSeq int64) ([]cr
 	ops := []crdt.Op{}
 	for _, value := range values {
 		var wrapper struct {
-			Seq int64    `json:"seq"`
-			Op  crdt.Op  `json:"op"`
+			Seq int64   `json:"seq"`
+			Op  crdt.Op `json:"op"`
 		}
 		if err := json.Unmarshal([]byte(value), &wrapper); err != nil {
 			continue

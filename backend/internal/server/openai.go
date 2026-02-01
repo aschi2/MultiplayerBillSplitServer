@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 )
@@ -33,8 +34,8 @@ type ReceiptItem struct {
 	RawText         *string  `json:"raw_text"`
 }
 
-func callOpenAIReceiptParse(ctx context.Context, apiKey string, image []byte) (*ReceiptParseResult, error) {
-	payload, err := buildOpenAIRequest(image)
+func callOpenAIReceiptParse(ctx context.Context, apiKey string, image []byte, contentType string) (*ReceiptParseResult, error) {
+	payload, err := buildOpenAIRequest(image, contentType)
 	if err != nil {
 		return nil, err
 	}
@@ -52,6 +53,19 @@ func callOpenAIReceiptParse(ctx context.Context, apiKey string, image []byte) (*
 		return nil, err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		body, _ := io.ReadAll(resp.Body)
+		var errResp struct {
+			Error struct {
+				Message string `json:"message"`
+			} `json:"error"`
+		}
+		if json.Unmarshal(body, &errResp) == nil && errResp.Error.Message != "" {
+			return nil, fmt.Errorf("openai error: %s", errResp.Error.Message)
+		}
+		return nil, fmt.Errorf("openai error: status %d", resp.StatusCode)
+	}
 
 	var response struct {
 		Choices []struct {
@@ -74,7 +88,7 @@ func callOpenAIReceiptParse(ctx context.Context, apiKey string, image []byte) (*
 	return &result, nil
 }
 
-func buildOpenAIRequest(image []byte) ([]byte, error) {
+func buildOpenAIRequest(image []byte, contentType string) ([]byte, error) {
 	encoded := base64.StdEncoding.EncodeToString(image)
 	schema := `{
   "merchant": "string or null",
@@ -98,23 +112,23 @@ func buildOpenAIRequest(image []byte) ([]byte, error) {
   "unparsed_lines": "array of strings"
 }`
 	body := map[string]any{
-		"model": "gpt-4o-mini",
+		"model": "gpt-4o",
 		"messages": []map[string]any{
 			{
 				"role": "system",
-				"content": "You are a receipt parser. Return ONLY valid JSON that matches the schema. If you are uncertain, set the field to null and add a warning. Do not include markdown.",
+				"content": "You are a receipt parser. Return ONLY valid JSON that matches the schema. Do not include markdown. IMPORTANT: all prices must be integers in cents (e.g., $5.99 -> 599). Detect quantities from markers like 'x', 'qty', leading numbers, and do NOT merge identical items—list each line separately OR set quantity accordingly. If items repeat as separate lines, set quantity to the count. Keep line_price_cents as the gross line amount before discounts; discount_cents is per-unit. If you are uncertain, set the field to null and add a warning.",
 			},
 			{
 				"role": "user",
 				"content": []map[string]any{
 					{
 						"type": "text",
-						"text": "Parse this receipt and return JSON with the schema: " + schema,
+						"text": "Parse this receipt and return JSON with the schema: " + schema + " Use best-effort extraction for prices and discounts; do not leave prices null if a number is present.",
 					},
 					{
 						"type": "image_url",
 						"image_url": map[string]any{
-							"url": "data:image/jpeg;base64," + encoded,
+							"url": "data:" + contentType + ";base64," + encoded,
 						},
 					},
 				},

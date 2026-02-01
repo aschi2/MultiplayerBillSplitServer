@@ -21,3 +21,25 @@ body {
 .accent-gradient {
   @apply bg-gradient-to-br from-primary-500/80 via-secondary-500/70 to-tertiary-500/70;
 }
+
+@layer components {
+  .action-btn {
+    @apply inline-flex items-center justify-center gap-1 rounded-xl px-4 py-2 text-sm font-semibold transition duration-150 ease-out shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-0;
+  }
+
+  .action-btn-surface {
+    @apply bg-surface-800/80 border border-surface-600 text-white hover:-translate-y-0.5 hover:border-primary-400 hover:bg-surface-700 focus:ring-primary-400/50;
+  }
+
+  .action-btn-primary {
+    @apply bg-primary-600 border border-primary-500 text-white hover:-translate-y-0.5 hover:bg-primary-500 focus:ring-primary-400/60;
+  }
+
+  .action-btn-danger {
+    @apply bg-error-600/90 border border-error-500 text-white hover:-translate-y-0.5 hover:bg-error-500 focus:ring-error-400/60;
+  }
+
+  .action-btn-compact {
+    @apply px-3 py-1.5 text-xs uppercase tracking-wide;
+  }
+}
