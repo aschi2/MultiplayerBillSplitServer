@@ -1,0 +1,12 @@
+.env
+node_modules/
+frontend/node_modules/
+frontend/.svelte-kit/
+backend/bin/
+.DS_Store
+*.log
+/certs/
+/caddy_data/
+/caddy_config/
+*.pem
+*.key

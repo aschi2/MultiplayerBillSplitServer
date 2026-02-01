@@ -1,0 +1,12 @@
+{$DOMAIN:localhost} {
+    encode zstd gzip
+    tls {{TLS_DIRECTIVE}}
+
+    @api path /api/*
+    reverse_proxy @api backend:8080
+
+    @ws path /ws/*
+    reverse_proxy @ws backend:8080
+
+    reverse_proxy frontend:3000
+}
