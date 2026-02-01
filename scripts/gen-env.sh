@@ -24,7 +24,7 @@ ensure_secret() {
   if [[ -z "$current" ]]; then
     local value
     value=$(openssl rand -base64 "$bytes")
-    perl -0777 -i -pe "s/^${key}=.*$/${key}=${value}/m" "$ENV_FILE"
+    KEY="$key" VALUE="$value" perl -0777 -i -pe 's/^\Q$ENV{KEY}\E=.*/$ENV{KEY}=$ENV{VALUE}/m' "$ENV_FILE"
   fi
 }
 
