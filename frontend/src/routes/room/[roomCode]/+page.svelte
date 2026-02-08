@@ -1303,11 +1303,16 @@ const pendingOps: any[] = [];
   })();
   $: receiptSubtotalCents = subtotalFromEditable(editableItems);
   $: parsedTaxCents = parseByCurrency(parsedTaxInput, receiptCurrencySelection || roomCurrency);
-  $: projectedTaxCents = baselineTaxCents + parsedTaxCents;
+  $: projectedTaxCents =
+    receiptCurrencySelection && roomCurrency && receiptCurrencySelection !== roomCurrency
+      ? NaN
+      : baselineTaxCents + parsedTaxCents;
   $: receiptTaxPercent =
     receiptSubtotalCents > 0 ? (parsedTaxCents / receiptSubtotalCents) * 100 : 0;
   $: projectedTaxPercent =
-    baselineSubtotalCents + receiptSubtotalCents > 0
+    !Number.isFinite(projectedTaxCents)
+      ? 0
+      : baselineSubtotalCents + receiptSubtotalCents > 0
       ? (projectedTaxCents / (baselineSubtotalCents + receiptSubtotalCents)) * 100
       : 0;
 
@@ -1896,12 +1901,14 @@ const pendingOps: any[] = [];
             <div>
               <p class="text-sm font-semibold">This receipt tax</p>
               <p class="text-xs text-surface-300">
-                Receipt subtotal: {formatAmount(receiptSubtotalCents)} · Tax %
+                Receipt subtotal: {formatAmount(receiptSubtotalCents, receiptCurrencySelection)} · Tax %
                 {receiptSubtotalCents > 0 ? ` ${receiptTaxPercent.toFixed(2)}%` : ' --%'}
               </p>
             </div>
             <div class="flex items-center gap-2">
-              <span class="text-sm text-surface-300">$</span>
+              <span class="text-sm text-surface-300">
+                {symbolFor(receiptCurrencySelection) || receiptCurrencySelection}
+              </span>
               <input
                 class="input w-28 text-right"
                 inputmode="decimal"
@@ -1915,14 +1922,25 @@ const pendingOps: any[] = [];
               <div>
                 <p class="text-sm font-semibold">Projected total tax</p>
                 <p class="text-xs text-surface-300">
-                  {formatAmount(baselineTaxCents)} + {formatAmount(parsedTaxCents)} = {formatAmount(projectedTaxCents)}
+                  {#if Number.isFinite(projectedTaxCents)}
+                    {formatAmount(baselineTaxCents)} + {formatAmount(parsedTaxCents, receiptCurrencySelection)} =
+                    {formatAmount(projectedTaxCents)}
+                  {:else}
+                    (Shown after import when bill currency matches receipt currency)
+                  {/if}
                 </p>
               </div>
               <div class="text-right text-sm">
-                <div class="font-semibold">{formatAmount(projectedTaxCents)}</div>
+                <div class="font-semibold">
+                  {#if Number.isFinite(projectedTaxCents)}
+                    {formatAmount(projectedTaxCents)}
+                  {:else}
+                    --
+                  {/if}
+                </div>
                 <div class="text-xs text-surface-300">
                   Total tax %:
-                  {baselineSubtotalCents + receiptSubtotalCents > 0
+                  {Number.isFinite(projectedTaxCents) && baselineSubtotalCents + receiptSubtotalCents > 0
                     ? `${projectedTaxPercent.toFixed(2)}%`
                     : '--%'}
                 </div>
