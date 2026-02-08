@@ -265,10 +265,10 @@ const pendingOps: any[] = [];
     return fxRate;
   };
 
-  const toCentsInput = (value: string, code = roomCurrency) => {
+  const toCentsInput = (value: string) => {
     const num = Number.parseFloat(value || '');
     if (!Number.isFinite(num)) return 0;
-    return Math.max(0, Math.round(num * factorFor(code)));
+    return Math.max(0, Math.round(num * factorFor(roomCurrency)));
   };
 
   const parseByCurrency = (value: string, code = roomCurrency) => {
@@ -283,13 +283,12 @@ const pendingOps: any[] = [];
     if (!list?.length) return 0;
     return list.reduce((sum, item) => {
       const qty = Math.max(1, Number.parseInt(item.quantity || '1', 10) || 1);
-      const unit = toCentsInput(item.unitPrice, receiptCurrencySelection || roomCurrency);
-      const line = toCentsInput(item.linePrice, receiptCurrencySelection || roomCurrency);
+      const unit = toCentsInput(item.unitPrice);
+      const line = toCentsInput(item.linePrice);
       const gross = line || unit * qty;
       const discountPct = Number.parseFloat(item.discountPercent || '0') || 0;
       const discountCentsPerUnit =
-        toCentsInput(item.discountCents, receiptCurrencySelection || roomCurrency) ||
-        (unit ? Math.round(unit * (discountPct / 100)) : 0);
+        toCentsInput(item.discountCents) || (unit ? Math.round(unit * (discountPct / 100)) : 0);
       const net = Math.max(0, gross - discountCentsPerUnit * qty);
       return sum + net;
     }, 0);
@@ -297,13 +296,12 @@ const pendingOps: any[] = [];
 
   const discountedUnitAndNetFromEditable = (item: typeof editableItems[number]) => {
     const qty = Math.max(1, Number.parseInt(item.quantity || '1', 10) || 1);
-    const unit = toCentsInput(item.unitPrice, receiptCurrencySelection || roomCurrency);
-    const line = toCentsInput(item.linePrice, receiptCurrencySelection || roomCurrency);
+    const unit = toCentsInput(item.unitPrice);
+    const line = toCentsInput(item.linePrice);
     const gross = line || unit * qty;
     const discountPct = Number.parseFloat(item.discountPercent || '0') || 0;
     const discountCentsPerUnit =
-      toCentsInput(item.discountCents, receiptCurrencySelection || roomCurrency) ||
-      (unit ? Math.round(unit * (discountPct / 100)) : 0);
+      toCentsInput(item.discountCents) || (unit ? Math.round(unit * (discountPct / 100)) : 0);
     const net = Math.max(0, gross - discountCentsPerUnit * qty);
     const netUnit = Math.max(0, unit - discountCentsPerUnit);
     return { netUnit, netTotal: net };
@@ -311,12 +309,12 @@ const pendingOps: any[] = [];
 
   const discountedUnitAndNetFromItemForm = () => {
     const qty = Math.max(1, Number.parseInt(itemForm.quantity || '1', 10) || 1);
-    const unit = toCentsInput(itemForm.unitPrice, roomCurrency);
-    const line = toCentsInput(itemForm.linePrice, roomCurrency);
+    const unit = toCentsInput(itemForm.unitPrice);
+    const line = toCentsInput(itemForm.linePrice);
     const gross = line || unit * qty;
     const discountPct = Number.parseFloat(itemForm.discountPercent || '0') || 0;
     const discountCentsPerUnit =
-      toCentsInput(itemForm.discountCents, roomCurrency) || (unit ? Math.round(unit * (discountPct / 100)) : 0);
+      toCentsInput(itemForm.discountCents) || (unit ? Math.round(unit * (discountPct / 100)) : 0);
     const netTotal = Math.max(0, gross - discountCentsPerUnit * qty);
     const netUnit = qty > 0 ? Math.max(0, Math.round(netTotal / qty)) : 0;
     return { netUnit, netTotal };
@@ -336,9 +334,7 @@ const pendingOps: any[] = [];
       const currentTax = parsedTaxCents;
       const adjustment = Math.round((removedNet / prevSubtotal) * currentTax);
       const newTax = Math.max(0, currentTax - adjustment);
-      const exp = exponentFor(receiptCurrencySelection || roomCurrency);
-      const factor = factorFor(receiptCurrencySelection || roomCurrency);
-      parsedTaxInput = (newTax / factor).toFixed(exp);
+      parsedTaxInput = (newTax / 100).toFixed(2);
     }
     receiptSubtotalCents = remainingSubtotal;
   };
@@ -807,14 +803,13 @@ const pendingOps: any[] = [];
       >();
       result.items.forEach((item) => {
         const qty = item.quantity && item.quantity > 0 ? item.quantity : 1;
-        // Receipt parse is in minor units for the detected currency (e.g. USD cents, JPY whole yen).
-        let unit = item.unit_price_cents != null ? item.unit_price_cents / parseFactor : 0;
-        let line = item.line_price_cents != null ? item.line_price_cents / parseFactor : 0;
+        let unit = item.unit_price_cents != null ? item.unit_price_cents / 100 : 0;
+        let line = item.line_price_cents != null ? item.line_price_cents / 100 : 0;
         if (!unit && line && qty > 0) unit = line / qty;
         if (!line && unit && qty > 0) line = unit * qty;
-        const disc = item.discount_cents != null ? item.discount_cents / parseFactor : 0;
+        const disc = item.discount_cents != null ? item.discount_cents / 100 : 0;
         const discPct = item.discount_percent != null ? item.discount_percent : unit ? (disc / unit) * 100 : 0;
-        const key = `${(item.name || 'Item').trim().toLowerCase()}|${unit.toFixed(parseExp)}|${disc.toFixed(parseExp)}`;
+        const key = `${(item.name || 'Item').trim().toLowerCase()}|${unit.toFixed(2)}|${disc.toFixed(2)}`;
         const existing = agg.get(key);
         if (existing) {
           existing.qty += qty;
@@ -826,9 +821,9 @@ const pendingOps: any[] = [];
       editableItems = Array.from(agg.values()).map((item) => ({
         name: item.name,
         quantity: String(item.qty),
-        unitPrice: item.unit ? item.unit.toFixed(parseExp) : '',
-        linePrice: item.line ? item.line.toFixed(parseExp) : '',
-        discountCents: item.discount ? item.discount.toFixed(parseExp) : '',
+        unitPrice: item.unit ? item.unit.toFixed(2) : '',
+        linePrice: item.line ? item.line.toFixed(2) : '',
+        discountCents: item.discount ? item.discount.toFixed(2) : '',
         discountPercent: item.discountPct ? item.discountPct.toFixed(2) : ''
       }));
       showReceiptReview = true;
@@ -1853,19 +1848,13 @@ const pendingOps: any[] = [];
                     <div class="flex items-center justify-between">
                       <span class="text-surface-300">Discounted unit</span>
                       <span class="font-semibold text-white">
-                        {formatAmount(
-                          discountedUnitAndNetFromEditable(editableItems[index]).netUnit,
-                          receiptCurrencySelection
-                        )}
+                        {formatAmount(discountedUnitAndNetFromEditable(editableItems[index]).netUnit)}
                       </span>
                     </div>
                     <div class="flex items-center justify-between">
                       <span class="text-surface-300">Total after discount</span>
                       <span class="font-semibold text-white">
-                        {formatAmount(
-                          discountedUnitAndNetFromEditable(editableItems[index]).netTotal,
-                          receiptCurrencySelection
-                        )}
+                        {formatAmount(discountedUnitAndNetFromEditable(editableItems[index]).netTotal)}
                       </span>
                     </div>
                   {/if}
