@@ -8,7 +8,8 @@ FROM base AS dev
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3000"]
 
 FROM base AS build
-RUN npm run build
+# Work around occasional broken npm ESM bin shim for vite inside Docker.
+RUN node ./node_modules/vite/bin/vite.js build
 
 FROM node:20-alpine AS prod
 WORKDIR /app
