@@ -87,6 +87,7 @@ func callOpenAIReceiptParse(ctx context.Context, apiKey string, image []byte, co
 	if err := json.Unmarshal([]byte(content), &result); err != nil {
 		return nil, err
 	}
+	result.Currency = normalizeCurrencyCode(result.Currency)
 	return &result, nil
 }
 
@@ -144,6 +145,7 @@ func callGeminiReceiptParse(ctx context.Context, apiKey string, image []byte, co
 	if err := json.Unmarshal([]byte(content), &result); err != nil {
 		return nil, err
 	}
+	result.Currency = normalizeCurrencyCode(result.Currency)
 	return &result, nil
 }
 
@@ -170,6 +172,7 @@ func buildOpenAIRequest(image []byte, contentType string) ([]byte, error) {
   "confidence": "number between 0 and 1",
   "unparsed_lines": "array of strings"
 }`
+	supported := strings.Join(supportedCurrencyCodes(), ", ")
 	body := map[string]any{
 		"model": "gpt-4o",
 		"messages": []map[string]any{
@@ -182,7 +185,7 @@ func buildOpenAIRequest(image []byte, contentType string) ([]byte, error) {
 				"content": []map[string]any{
 					{
 						"type": "text",
-						"text": "Parse this receipt and return JSON with the schema: " + schema + " Use best-effort extraction for prices and discounts; do not leave prices null if a number is present. Detect the currency (ISO 4217) from symbols or codes if present; otherwise set currency to null. Do not wrap the JSON in markdown or code fences.",
+						"text": "Parse this receipt and return JSON with the schema: " + schema + " Use best-effort extraction for prices and discounts; do not leave prices null if a number is present. Currency: set `currency` to an ISO 4217 code. If the receipt does not explicitly show a currency symbol/code, infer the most likely country/locale from context clues (address, language, phone numbers, tax labels, merchant name, etc.) and choose the corresponding currency. Only use one of these supported codes: " + supported + ". If you cannot infer confidently OR the inferred currency is not in the supported list, set currency to null and add a warning. Do not wrap the JSON in markdown or code fences.",
 					},
 					{
 						"type": "image_url",
@@ -223,11 +226,12 @@ func buildGeminiRequest(image []byte, contentType string) ([]byte, error) {
   "confidence": "number between 0 and 1",
   "unparsed_lines": "array of strings"
 }`
+	supported := strings.Join(supportedCurrencyCodes(), ", ")
 	body := map[string]any{
 		"system_instruction": map[string]any{
 			"parts": []map[string]any{
 				{
-					"text": "You are a receipt parser. Return ONLY valid JSON that matches the schema. Do not include markdown, code fences, or any extra text. IMPORTANT: all prices must be integers in cents (e.g., $5.99 -> 599). Detect quantities from markers like 'x', 'qty', leading numbers, and do NOT merge identical items—list each line separately OR set quantity accordingly. If items repeat as separate lines, set quantity to the count. Keep line_price_cents as the gross line amount before discounts; discount_cents is per-unit. Detect the currency (ISO 4217) from symbols or codes if present; if uncertain, set currency to null and add a warning. To minimize output size, omit raw text for lines unless it is truly necessary.",
+					"text": "You are a receipt parser. Return ONLY valid JSON that matches the schema. Do not include markdown, code fences, or any extra text. IMPORTANT: all prices must be integers in cents (e.g., $5.99 -> 599). Detect quantities from markers like 'x', 'qty', leading numbers, and do NOT merge identical items—list each line separately OR set quantity accordingly. If items repeat as separate lines, set quantity to the count. Keep line_price_cents as the gross line amount before discounts; discount_cents is per-unit. Currency: set `currency` to an ISO 4217 code. If the receipt does not explicitly show a currency symbol/code, infer the most likely country/locale from context clues (address, language, phone numbers, tax labels, merchant name, etc.) and choose the corresponding currency. Only use one of these supported codes: " + supported + ". If you cannot infer confidently OR the inferred currency is not in the supported list, set currency to null and add a warning. To minimize output size, omit raw text for lines unless it is truly necessary.",
 				},
 			},
 		},
@@ -235,7 +239,7 @@ func buildGeminiRequest(image []byte, contentType string) ([]byte, error) {
 			{
 				"parts": []map[string]any{
 					{
-						"text": "Parse this receipt and return ONLY raw JSON with the schema: " + schema + " Use best-effort extraction for prices and discounts; do not leave prices null if a number is present. Detect currency (ISO 4217) if present; else use null. Do not wrap the JSON in markdown or code fences. Keep output concise.",
+						"text": "Parse this receipt and return ONLY raw JSON with the schema: " + schema + " Use best-effort extraction for prices and discounts; do not leave prices null if a number is present. Currency: set `currency` to an ISO 4217 code. If it is not explicitly shown, infer from context; only use supported codes (" + supported + "). Otherwise use null and add a warning. Do not wrap the JSON in markdown or code fences. Keep output concise.",
 					},
 					{
 						"inline_data": map[string]any{

@@ -1,5 +1,10 @@
 package server
 
+import (
+	"sort"
+	"strings"
+)
+
 type CurrencyInfo struct {
 	Code     string
 	Symbol   string
@@ -23,6 +28,26 @@ var currencyMeta = map[string]CurrencyInfo{
 	"INR": {Code: "INR", Symbol: "₹", Exponent: 2, Flag: "🇮🇳"},
 	"SEK": {Code: "SEK", Symbol: "kr", Exponent: 2, Flag: "🇸🇪"},
 	"NOK": {Code: "NOK", Symbol: "kr", Exponent: 2, Flag: "🇳🇴"},
+}
+
+func normalizeCurrencyCode(code string) string {
+	c := strings.ToUpper(strings.TrimSpace(code))
+	if c == "" {
+		return ""
+	}
+	if _, ok := currencyMeta[c]; ok {
+		return c
+	}
+	return ""
+}
+
+func supportedCurrencyCodes() []string {
+	out := make([]string, 0, len(currencyMeta))
+	for k := range currencyMeta {
+		out = append(out, k)
+	}
+	sort.Strings(out)
+	return out
 }
 
 func currencyExponent(code string) int {
