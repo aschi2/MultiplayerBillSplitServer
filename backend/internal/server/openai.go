@@ -178,7 +178,7 @@ func buildOpenAIRequest(image []byte, contentType string) ([]byte, error) {
 		"messages": []map[string]any{
 			{
 				"role":    "system",
-				"content": "You are a receipt parser. Return ONLY valid JSON that matches the schema. Do not include markdown. IMPORTANT: all prices must be integers in cents (e.g., $5.99 -> 599). Detect quantities from markers like 'x', 'qty', leading numbers, and do NOT merge identical items—list each line separately OR set quantity accordingly. If items repeat as separate lines, set quantity to the count. Keep line_price_cents as the gross line amount before discounts; discount_cents is per-unit. If you are uncertain, set the field to null and add a warning.",
+				"content": "You are a receipt parser. Return ONLY valid JSON that matches the schema. Do not include markdown. IMPORTANT: all prices must be integers in cents (e.g., $5.99 -> 599). Detect quantities from markers like 'x', 'qty', leading numbers, and do NOT merge identical items—list each line separately OR set quantity accordingly. If items repeat as separate lines, set quantity to the count. Keep line_price_cents as the gross line amount before discounts; discount_cents is per-unit. Use valid JSON escaping only (never emit invalid escapes like \\%). If you are uncertain, set the field to null and add a warning.",
 			},
 			{
 				"role": "user",
@@ -231,7 +231,7 @@ func buildGeminiRequest(image []byte, contentType string) ([]byte, error) {
 		"system_instruction": map[string]any{
 			"parts": []map[string]any{
 				{
-					"text": "You are a receipt parser. Return ONLY valid JSON that matches the schema. Do not include markdown, code fences, or any extra text. IMPORTANT: all prices must be integers in cents (e.g., $5.99 -> 599). Detect quantities from markers like 'x', 'qty', leading numbers, and do NOT merge identical items—list each line separately OR set quantity accordingly. If items repeat as separate lines, set quantity to the count. Keep line_price_cents as the gross line amount before discounts; discount_cents is per-unit. Currency: set `currency` to an ISO 4217 code. If the receipt does not explicitly show a currency symbol/code, infer the most likely country/locale from context clues (address, language, phone numbers, tax labels, merchant name, etc.) and choose the corresponding currency. Only use one of these supported codes: " + supported + ". If you cannot infer confidently OR the inferred currency is not in the supported list, set currency to null and add a warning. To minimize output size, omit raw text for lines unless it is truly necessary.",
+					"text": "You are a receipt parser. Return ONLY valid JSON that matches the schema. Do not include markdown, code fences, or any extra text. IMPORTANT: all prices must be integers in cents (e.g., $5.99 -> 599). Detect quantities from markers like 'x', 'qty', leading numbers, and do NOT merge identical items—list each line separately OR set quantity accordingly. If items repeat as separate lines, set quantity to the count. Keep line_price_cents as the gross line amount before discounts; discount_cents is per-unit. Use valid JSON escaping only (never emit invalid escapes like \\%). Currency: set `currency` to an ISO 4217 code. If the receipt does not explicitly show a currency symbol/code, infer the most likely country/locale from context clues (address, language, phone numbers, tax labels, merchant name, etc.) and choose the corresponding currency. Only use one of these supported codes: " + supported + ". If you cannot infer confidently OR the inferred currency is not in the supported list, set currency to null and add a warning. To minimize output size, omit raw text for lines unless it is truly necessary.",
 				},
 			},
 		},
@@ -271,12 +271,87 @@ func cleanModelJSON(raw string) string {
 		content = strings.TrimSpace(content)
 	}
 	if extracted, ok := extractFirstJSONObject(content); ok {
-		return extracted
+		return sanitizeInvalidJSONEscapes(extracted)
 	}
 	if repaired, ok := repairTruncatedJSONObject(content); ok {
-		return repaired
+		return sanitizeInvalidJSONEscapes(repaired)
 	}
-	return content
+	return sanitizeInvalidJSONEscapes(content)
+}
+
+// sanitizeInvalidJSONEscapes removes invalid escape sequences inside JSON strings.
+// Some LLMs occasionally emit things like "\\%" (i.e. "\%") which is not valid JSON.
+// We only touch escapes while "in string" to avoid changing structure.
+func sanitizeInvalidJSONEscapes(s string) string {
+	// Fast-path: no backslash, nothing to sanitize.
+	if !strings.Contains(s, `\`) {
+		return s
+	}
+
+	var b strings.Builder
+	b.Grow(len(s))
+
+	inString := false
+	escape := false
+	for i := 0; i < len(s); i++ {
+		ch := s[i]
+
+		if !inString {
+			if ch == '"' {
+				inString = true
+			}
+			b.WriteByte(ch)
+			continue
+		}
+
+		// inString
+		if escape {
+			escape = false
+			switch ch {
+			case '"', '\\', '/', 'b', 'f', 'n', 'r', 't':
+				// valid one-char escape
+				b.WriteByte(ch)
+				continue
+			case 'u':
+				// Keep the unicode escape prefix. The following 4 chars will be copied as-is.
+				b.WriteByte(ch)
+				continue
+			default:
+				// Invalid escape (e.g. \%). Drop the backslash and keep the character.
+				// Note: the backslash has already been written to the builder, so we need
+				// to remove it. Since strings.Builder can't "unwrite", we avoid writing
+				// the backslash in the first place (handled below).
+				//
+				// This branch is kept for completeness but should be unreachable.
+				b.WriteByte(ch)
+				continue
+			}
+		}
+
+		if ch == '\\' {
+			// Peek the next byte to decide if this is a valid escape.
+			if i+1 >= len(s) {
+				// Trailing backslash inside a string would break JSON; drop it.
+				continue
+			}
+			next := s[i+1]
+			valid := next == '"' || next == '\\' || next == '/' ||
+				next == 'b' || next == 'f' || next == 'n' || next == 'r' || next == 't' || next == 'u'
+			if !valid {
+				// Skip the backslash; keep the next character as literal.
+				continue
+			}
+			escape = true
+			b.WriteByte(ch)
+			continue
+		}
+		if ch == '"' {
+			inString = false
+		}
+		b.WriteByte(ch)
+	}
+
+	return b.String()
 }
 
 func firstGeminiText(candidates []struct {
