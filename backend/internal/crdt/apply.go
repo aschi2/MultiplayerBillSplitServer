@@ -29,7 +29,9 @@ type TaxTipPayload struct {
 }
 
 type RoomPayload struct {
-	Name string `json:"name"`
+	Name           string `json:"name"`
+	Currency       string `json:"currency,omitempty"`
+	TargetCurrency string `json:"target_currency,omitempty"`
 }
 
 func ApplyOp(doc *RoomDoc, op Op) {
@@ -39,6 +41,20 @@ func ApplyOp(doc *RoomDoc, op Op) {
 
 	if op.Timestamp == 0 {
 		op.Timestamp = time.Now().UnixMilli()
+	}
+
+	// ensure maps are initialized (old snapshots may omit them)
+	if doc.Items == nil {
+		doc.Items = map[string]*Item{}
+	}
+	if doc.Participants == nil {
+		doc.Participants = map[string]*Participant{}
+	}
+	if doc.Tombstones == nil {
+		doc.Tombstones = map[string]int64{}
+	}
+	if doc.ParticipantTombstones == nil {
+		doc.ParticipantTombstones = map[string]int64{}
 	}
 
 	switch op.Kind {
@@ -78,6 +94,9 @@ func ApplyOp(doc *RoomDoc, op Op) {
 		}
 		participant := payload.Participant
 		participant.UpdatedAt = op.Timestamp
+		if doc.ParticipantTombstones[participant.ID] > op.Timestamp {
+			return
+		}
 		if existing, ok := doc.Participants[participant.ID]; ok {
 			if existing.UpdatedAt > op.Timestamp {
 				return
@@ -92,6 +111,7 @@ func ApplyOp(doc *RoomDoc, op Op) {
 		if payload.ID == "" {
 			return
 		}
+		doc.ParticipantTombstones[payload.ID] = op.Timestamp
 		delete(doc.Participants, payload.ID)
 	case "assign_item":
 		var payload AssignPayload
@@ -120,10 +140,17 @@ func ApplyOp(doc *RoomDoc, op Op) {
 		if json.Unmarshal(op.Payload, &payload) != nil {
 			return
 		}
-		if payload.Name == "" {
-			return
+		if payload.Name != "" {
+			doc.Name = payload.Name
+			doc.UpdatedAt = op.Timestamp
 		}
-		doc.Name = payload.Name
-		doc.UpdatedAt = op.Timestamp
+		if payload.Currency != "" {
+			doc.Currency = payload.Currency
+			doc.UpdatedAt = op.Timestamp
+		}
+		if payload.TargetCurrency != "" {
+			doc.TargetCurrency = payload.TargetCurrency
+			doc.UpdatedAt = op.Timestamp
+		}
 	}
 }

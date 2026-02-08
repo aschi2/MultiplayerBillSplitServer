@@ -2,9 +2,10 @@
   import { onMount } from 'svelte';
   import { browser } from '$app/environment';
   import Avatar from '$lib/components/Avatar.svelte';
-  import { formatCents, initialsFromName } from '$lib/utils';
+  import { formatCurrency, initialsFromName } from '$lib/utils';
   import type { RoomDoc, ReceiptParseResult, Item, Participant } from '$lib/types';
   import { getApiBase, getWsBase } from '$lib/api';
+  import { COMMON_CURRENCIES, DEFAULT_CURRENCY, EXPONENTS, SYMBOLS, FLAGS } from '$lib/currency';
 
   export let data;
   let roomCode = data.roomCode as string;
@@ -16,8 +17,19 @@
   let receiptResult: ReceiptParseResult | null = null;
   let showReceiptReview = false;
   let warningBanner = false;
+  let receiptWarnings: string[] = [];
   let receiptError: string | null = null;
   let receiptUploading = false;
+  let receiptIsAddon = false;
+  let baselineTaxCents = 0;
+  let baselineSubtotalCents = 0;
+  let parsedTaxInput = '';
+  let receiptCurrencySelection: string = DEFAULT_CURRENCY;
+  let parsedTaxCents = 0;
+  let receiptSubtotalCents = 0;
+  let projectedTaxCents = 0;
+  let receiptTaxPercent = 0;
+  let projectedTaxPercent = 0;
   let showItemModal = false;
   let itemModalMode: 'new' | 'edit' = 'new';
   let itemModalId: string | null = null;
@@ -40,6 +52,18 @@
     tax: number;
     tip: number;
     total: number;
+    converted?: {
+      gross: number;
+      discount: number;
+      net: number;
+      tax: number;
+      tip: number;
+      total: number;
+      perPerson: { id: string; total: number }[];
+      rate: number;
+      asOf?: string | null;
+      currency: string;
+    };
     perPerson: {
       id: string;
       name: string;
@@ -66,6 +90,11 @@
   let taxPercent = 0;
   let tipPercent = 0;
   let wsStatus: 'connecting' | 'connected' | 'reconnecting' | 'disconnected' = 'connecting';
+  let roomCurrency: string = DEFAULT_CURRENCY;
+  let targetCurrency: string = DEFAULT_CURRENCY;
+  let detectedCurrency: string | null = null;
+  let fxRate: number | null = null;
+  let fxAsOf: string | null = null;
 let editableItems: {
     name: string;
     quantity: string;
@@ -76,6 +105,8 @@ let editableItems: {
   }[] = [];
   let items: Item[] = [];
   let participants: Participant[] = [];
+  let initialsCounts: Record<string, number> = {};
+  let initialsBadges: Record<string, string> = {};
   $: participantAssignments = (() => {
     const map: Record<string, boolean> = {};
     items.forEach((item) => {
@@ -88,20 +119,21 @@ let editableItems: {
   let participantAssignments: Record<string, boolean> = {};
   let shareLink = '';
   let qrUrl = '';
-  let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
-  const RECONNECT_MIN = 500;
-  const RECONNECT_MAX = 5000;
-  let reconnectDelay = RECONNECT_MIN;
-  let resyncInterval: ReturnType<typeof setInterval> | null = null;
-  let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
-  let connectionCheckInterval: ReturnType<typeof setInterval> | null = null;
-  let lastMessageAt = Date.now();
-  let lastPingAt = 0;
-  let missedPongs = 0;
-  let currentSeq = 0;
-  let isConnecting = false;
-  let forceClose = false;
-  const pendingOps: any[] = [];
+let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+const RECONNECT_MIN = 500;
+const RECONNECT_MAX = 5000;
+const PING_INTERVAL = 5000;
+const PONG_TIMEOUT = 10000;
+let reconnectDelay = RECONNECT_MIN;
+let resyncInterval: ReturnType<typeof setInterval> | null = null;
+let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
+let pongTimer: ReturnType<typeof setTimeout> | null = null;
+let lastMessageAt = Date.now();
+let currentSeq = 0;
+let isConnecting = false;
+let forceClose = false;
+let wsGeneration = 0;
+const pendingOps: any[] = [];
 
   const safeClose = () => {
     try {
@@ -109,6 +141,14 @@ let editableItems: {
     } catch {
       // ignore
     }
+  };
+
+  const beginReconnect = () => {
+    if (wsStatus === 'reconnecting') return;
+    wsStatus = 'reconnecting';
+    reconnectDelay = RECONNECT_MIN;
+    if (reconnectTimer) clearTimeout(reconnectTimer);
+    reconnectTimer = setTimeout(connectWS, reconnectDelay);
   };
 
   const sendOp = (op: any) => {
@@ -162,13 +202,141 @@ let editableItems: {
   };
 
   const hexSeed = (input: string) => {
-    const clean = input.replace(/[^a-fA-F0-9]/g, '');
-    if (clean.length >= 6) return clean.slice(0, 6).toLowerCase();
-    let hash = 0;
+    // FNV-1a for stable, well-spread 6-hex seeds
+    let hash = 0x811c9dc5;
     for (let i = 0; i < input.length; i++) {
-      hash = (hash * 31 + input.charCodeAt(i)) >>> 0;
+      hash ^= input.charCodeAt(i);
+      hash = Math.imul(hash, 0x01000193);
     }
-    return hash.toString(16).padStart(6, '0').slice(0, 6);
+    return (hash >>> 0).toString(16).padStart(6, '0').slice(0, 6);
+  };
+
+  const exponentFor = (code: string) => EXPONENTS[code] ?? 2;
+  const factorFor = (code: string) => Math.pow(10, exponentFor(code));
+  const symbolFor = (code: string) => SYMBOLS[code] ?? '';
+  const flagFor = (code: string) => FLAGS[code] ?? '🏳️';
+  const formatAmount = (amount: number, code = roomCurrency) =>
+    formatCurrency(amount, code, symbolFor(code), exponentFor(code));
+
+  const changeCurrency = (code: string) => {
+    if (!code) return;
+    const upper = code.toUpperCase();
+    roomCurrency = upper;
+    room = room ? { ...room, currency: upper } : room;
+    const payload = { currency: upper };
+    sendOp({ kind: 'set_room_name', payload });
+    applyLocalOp({ kind: 'set_room_name', payload, timestamp: Date.now() });
+  };
+
+  const changeTargetCurrency = (code: string) => {
+    if (!code) return;
+    const upper = code.toUpperCase();
+    targetCurrency = upper;
+    room = room ? { ...room, target_currency: upper } : room;
+    const payload = { target_currency: upper };
+    sendOp({ kind: 'set_room_name', payload });
+    applyLocalOp({ kind: 'set_room_name', payload, timestamp: Date.now() });
+    fxRate = null;
+    fxAsOf = null;
+  };
+
+  const ensureFxRate = async () => {
+    if (targetCurrency === roomCurrency) {
+      fxRate = 1;
+      fxAsOf = null;
+      return 1;
+    }
+    if (fxRate) return fxRate;
+    const res = await fetch(`${apiBase}/fx?base=${roomCurrency}&target=${targetCurrency}`);
+    if (!res.ok) throw new Error('Rate unavailable');
+    const payload = await res.json();
+    fxRate = Number(payload.rate);
+    if (payload.as_of) {
+      const ts =
+        typeof payload.as_of === 'number'
+          ? payload.as_of * 1000
+          : Number.isFinite(Date.parse(payload.as_of))
+            ? Date.parse(payload.as_of)
+            : NaN;
+      fxAsOf = Number.isFinite(ts) ? new Date(ts).toISOString() : null;
+    } else {
+      fxAsOf = null;
+    }
+    return fxRate;
+  };
+
+  const toCentsInput = (value: string) => {
+    const num = Number.parseFloat(value || '');
+    if (!Number.isFinite(num)) return 0;
+    return Math.max(0, Math.round(num * factorFor(roomCurrency)));
+  };
+
+  const parseByCurrency = (value: string, code = roomCurrency) => {
+    const exp = exponentFor(code);
+    const factor = Math.pow(10, exp);
+    const num = Number.parseFloat(value || '');
+    if (!Number.isFinite(num)) return 0;
+    return Math.max(0, Math.round(num * factor));
+  };
+
+  const subtotalFromEditable = (list: typeof editableItems) => {
+    if (!list?.length) return 0;
+    return list.reduce((sum, item) => {
+      const qty = Math.max(1, Number.parseInt(item.quantity || '1', 10) || 1);
+      const unit = toCentsInput(item.unitPrice);
+      const line = toCentsInput(item.linePrice);
+      const gross = line || unit * qty;
+      const discountPct = Number.parseFloat(item.discountPercent || '0') || 0;
+      const discountCentsPerUnit =
+        toCentsInput(item.discountCents) || (unit ? Math.round(unit * (discountPct / 100)) : 0);
+      const net = Math.max(0, gross - discountCentsPerUnit * qty);
+      return sum + net;
+    }, 0);
+  };
+
+  const discountedUnitAndNetFromEditable = (item: typeof editableItems[number]) => {
+    const qty = Math.max(1, Number.parseInt(item.quantity || '1', 10) || 1);
+    const unit = toCentsInput(item.unitPrice);
+    const line = toCentsInput(item.linePrice);
+    const gross = line || unit * qty;
+    const discountPct = Number.parseFloat(item.discountPercent || '0') || 0;
+    const discountCentsPerUnit =
+      toCentsInput(item.discountCents) || (unit ? Math.round(unit * (discountPct / 100)) : 0);
+    const net = Math.max(0, gross - discountCentsPerUnit * qty);
+    const netUnit = Math.max(0, unit - discountCentsPerUnit);
+    return { netUnit, netTotal: net };
+  };
+
+  const discountedUnitAndNetFromItemForm = () => {
+    const qty = Math.max(1, Number.parseInt(itemForm.quantity || '1', 10) || 1);
+    const unit = toCentsInput(itemForm.unitPrice);
+    const line = toCentsInput(itemForm.linePrice);
+    const gross = line || unit * qty;
+    const discountPct = Number.parseFloat(itemForm.discountPercent || '0') || 0;
+    const discountCentsPerUnit =
+      toCentsInput(itemForm.discountCents) || (unit ? Math.round(unit * (discountPct / 100)) : 0);
+    const netTotal = Math.max(0, gross - discountCentsPerUnit * qty);
+    const netUnit = qty > 0 ? Math.max(0, Math.round(netTotal / qty)) : 0;
+    return { netUnit, netTotal };
+  };
+
+  const removeEditableItem = (index: number) => {
+    if (!receiptResult) return;
+    const list = [...editableItems];
+    const removed = list[index];
+    if (!removed) return;
+    const prevSubtotal = receiptSubtotalCents || subtotalFromEditable(list);
+    list.splice(index, 1);
+    editableItems = list;
+    const removedNet = discountedUnitAndNetFromEditable(removed).netTotal;
+    const remainingSubtotal = subtotalFromEditable(list);
+    if (prevSubtotal > 0 && parsedTaxInput !== null && parsedTaxInput !== undefined) {
+      const currentTax = parsedTaxCents;
+      const adjustment = Math.round((removedNet / prevSubtotal) * currentTax);
+      const newTax = Math.max(0, currentTax - adjustment);
+      parsedTaxInput = (newTax / 100).toFixed(2);
+    }
+    receiptSubtotalCents = remainingSubtotal;
   };
 
   const fallbackSeed = (id: string, name?: string) => {
@@ -252,6 +420,14 @@ let editableItems: {
         if (payload?.name) {
           next.name = payload.name;
         }
+        if (payload?.currency) {
+          roomCurrency = String(payload.currency).toUpperCase();
+          next.currency = roomCurrency;
+        }
+        if (payload?.target_currency) {
+          targetCurrency = String(payload.target_currency).toUpperCase();
+          next.target_currency = targetCurrency;
+        }
         break;
       }
     }
@@ -275,6 +451,7 @@ let editableItems: {
   const connectWS = () => {
     if (isConnecting) return;
     isConnecting = true;
+    const gen = ++wsGeneration;
     if (reconnectTimer) {
       clearTimeout(reconnectTimer);
       reconnectTimer = null;
@@ -287,47 +464,35 @@ let editableItems: {
       clearInterval(heartbeatInterval);
       heartbeatInterval = null;
     }
-    if (connectionCheckInterval) {
-      clearInterval(connectionCheckInterval);
-      connectionCheckInterval = null;
-    }
-    if (ws) {
-      try {
-        ws.close();
-      } catch {
-        // ignore
-      }
-      ws = null;
-    }
+    safeClose();
+    ws = null;
     forceClose = false;
 
     wsStatus = 'connecting';
     ws = new WebSocket(`${wsBase}/${roomCode}`);
     ws.onopen = () => {
+      if (gen !== wsGeneration) return;
       isConnecting = false;
       reconnectDelay = RECONNECT_MIN;
       wsStatus = 'connected';
       lastMessageAt = Date.now();
-      lastPingAt = 0;
-      missedPongs = 0;
+      if (pongTimer) {
+        clearTimeout(pongTimer);
+        pongTimer = null;
+      }
       requestSnapshot();
       resyncInterval = setInterval(requestSnapshot, 60000);
       heartbeatInterval = setInterval(() => {
         if (ws && ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify({ type: 'ping' }));
-          lastPingAt = Date.now();
-          missedPongs = Math.min(missedPongs + 1, 100);
+          if (pongTimer) clearTimeout(pongTimer);
+          pongTimer = setTimeout(() => {
+            if (gen === wsGeneration) {
+              safeClose();
+            }
+          }, PONG_TIMEOUT);
         }
-      }, 5000);
-      connectionCheckInterval = setInterval(() => {
-        if (!ws) return;
-        const state = ws.readyState;
-        if (state !== WebSocket.OPEN || missedPongs >= 6) {
-          if (reconnectTimer) clearTimeout(reconnectTimer);
-          reconnectDelay = RECONNECT_MIN;
-          safeClose();
-        }
-      }, 10000);
+      }, PING_INTERVAL);
       while (pendingOps.length && ws && ws.readyState === WebSocket.OPEN) {
         const next = pendingOps.shift();
         ws.send(JSON.stringify({ type: 'op', op: next }));
@@ -336,10 +501,14 @@ let editableItems: {
       sendPresence(true);
     };
     ws.onmessage = (event) => {
+      if (gen !== wsGeneration) return;
       const message = JSON.parse(event.data);
       lastMessageAt = Date.now();
       if (message.type === 'pong') {
-        missedPongs = 0;
+        if (pongTimer) {
+          clearTimeout(pongTimer);
+          pongTimer = null;
+        }
         return;
       }
       if (message.type === 'snapshot') {
@@ -356,6 +525,8 @@ let editableItems: {
           ])
         )
       };
+      roomCurrency = (room.currency || DEFAULT_CURRENCY).toUpperCase();
+      targetCurrency = (room.target_currency || roomCurrency || DEFAULT_CURRENCY).toUpperCase();
       const self = identity.userId && room.participants?.[identity.userId];
       if (self) {
         identity = {
@@ -380,6 +551,7 @@ let editableItems: {
       }
     };
     ws.onclose = () => {
+      if (gen !== wsGeneration) return;
       isConnecting = false;
       sendPresence(false);
       if (resyncInterval) {
@@ -387,14 +559,19 @@ let editableItems: {
         resyncInterval = null;
       }
       if (!forceClose) {
+        wsStatus = 'reconnecting';
         scheduleReconnect();
       } else {
         wsStatus = 'disconnected';
       }
     };
     ws.onerror = () => {
+      if (gen !== wsGeneration) return;
       isConnecting = false;
-      if (!forceClose) scheduleReconnect();
+      if (!forceClose) {
+        wsStatus = 'reconnecting';
+        scheduleReconnect();
+      }
     };
     window.addEventListener('beforeunload', () => sendPresence(false));
   };
@@ -421,37 +598,105 @@ let editableItems: {
     const tax = room.tax_cents || 0;
     const tip = room.tip_cents || 0;
 
-    // per-person accumulators
+    // per-person accumulators (float cents before final rounding)
     const perPerson = new Map<
       string,
-      { name: string; color: string; items: { name: string; share_cents: number }[]; itemsTotal: number }
+      {
+        name: string;
+        color: string;
+        items: { name: string; share_cents: number }[];
+        itemsTotal: number; // finalized int cents
+        itemsAcc: number; // float cents before rounding
+      }
     >();
 
+    const splitProportional = (total: number, weights: Record<string, number>) => {
+      const entries = Object.entries(weights).filter(([, w]) => w > 0);
+      const sumW = entries.reduce((s, [, w]) => s + w, 0);
+      if (total <= 0 || sumW <= 0 || !entries.length) return {} as Record<string, number>;
+      const bases: Record<string, number> = {};
+      const remainders: { id: string; frac: number }[] = [];
+      let used = 0;
+      entries.forEach(([id, w]) => {
+        const exact = (total * w) / sumW;
+        const base = Math.floor(exact);
+        bases[id] = base;
+        used += base;
+        remainders.push({ id, frac: exact - base });
+      });
+      let rem = total - used;
+      remainders.sort((a, b) => b.frac - a.frac || a.id.localeCompare(b.id));
+      for (let i = 0; i < rem; i++) {
+        bases[remainders[i].id] += 1;
+      }
+      return bases;
+    };
+
+    // accumulate exact shares in float cents
     itemsArr.forEach((it) => {
       const assignees = Object.entries(it.assigned || {}).filter(([, on]) => on).map(([uid]) => uid);
-      const shareCount = assignees.length || 1; // if nobody assigned, treat as unassigned to nobody; still split 1 to avoid div0
+      if (assignees.length === 0) return;
       const netLine = Math.max(0, it.line_price_cents - it.discount_cents * (it.quantity || 1));
-      const share = Math.round(netLine / shareCount);
+      const shareExact = netLine / assignees.length;
       assignees.forEach((uid) => {
         const p = participants[uid];
-        const entry = perPerson.get(uid) || {
-          name: p?.name || uid,
-          color: colorHex(p?.colorSeed),
-          items: [],
-          itemsTotal: 0
-        };
-        entry.items.push({ name: it.name, share_cents: share });
-        entry.itemsTotal += share;
+        const entry =
+          perPerson.get(uid) ||
+          ({
+            name: p?.name || uid,
+            color: colorHex(p?.colorSeed),
+            items: [],
+            itemsTotal: 0,
+            itemsAcc: 0
+          } as any);
+        entry.itemsAcc += shareExact;
+        perPerson.set(uid, entry);
+      });
+      // store per-item approximate shares for display if needed
+      const rem = netLine - shareExact * assignees.length;
+      assignees.forEach((uid) => {
+        const entry = perPerson.get(uid);
+        if (!entry) return;
+        // push rounded for display only; final balancing happens after
+        entry.items.push({ name: it.name, share_cents: Math.round(shareExact) });
         perPerson.set(uid, entry);
       });
     });
 
-    const totalItems = Array.from(perPerson.values()).reduce((s, p) => s + p.itemsTotal, 0) || 1;
+    // finalize item shares with largest-remainder method across people
+    const floorTotals: Record<string, number> = {};
+    const remainders: { id: string; frac: number }[] = [];
+    perPerson.forEach((person, uid) => {
+      const exact = person.itemsAcc;
+      const floorVal = Math.floor(exact);
+      floorTotals[uid] = floorVal;
+      remainders.push({ id: uid, frac: exact - floorVal });
+    });
+    let used = Object.values(floorTotals).reduce((s, v) => s + v, 0);
+    let remCents = net - used;
+    remainders.sort((a, b) => b.frac - a.frac || a.id.localeCompare(b.id));
+    for (let i = 0; i < remCents; i++) {
+      const target = remainders[i % remainders.length]?.id;
+      if (target) floorTotals[target] += 1;
+    }
+    perPerson.forEach((person, uid) => {
+      person.itemsTotal = floorTotals[uid] || 0;
+      perPerson.set(uid, person);
+    });
+
+    const totalItems = Array.from(perPerson.values()).reduce((s, p) => s + p.itemsTotal, 0) || 0;
+
+    const weights: Record<string, number> = {};
+    perPerson.forEach((person, uid) => {
+      weights[uid] = person.itemsTotal;
+    });
+
+    const taxSplits = splitProportional(tax, weights);
+    const tipSplits = splitProportional(tip, weights);
 
     const detailed = Array.from(perPerson.entries()).map(([uid, person]) => {
-      const ratio = person.itemsTotal / totalItems;
-      const taxShare = Math.round(tax * ratio);
-      const tipShare = Math.round(tip * ratio);
+      const taxShare = taxSplits[uid] || 0;
+      const tipShare = tipSplits[uid] || 0;
       const totalShare = person.itemsTotal + taxShare + tipShare;
       return { id: uid, ...person, taxShare, tipShare, total: totalShare };
     });
@@ -460,11 +705,71 @@ let editableItems: {
     return { gross, discount, net, tax, tip, total, perPerson: detailed };
   };
 
+  const buildSummary = async () => {
+    const base = computeSummary();
+    if (!base) {
+      summaryData = null;
+      return;
+    }
+    summaryData = base;
+    if (targetCurrency === roomCurrency) {
+      return;
+    }
+    try {
+      const rate = await ensureFxRate();
+      const srcExp = exponentFor(roomCurrency);
+      const tgtExp = exponentFor(targetCurrency);
+      const srcFactor = Math.pow(10, srcExp);
+      const tgtFactor = Math.pow(10, tgtExp);
+      const roundHalfEven = (value: number) => {
+        const floor = Math.floor(value);
+        const frac = value - floor;
+        if (frac > 0.5 + 1e-9) return floor + 1;
+        if (Math.abs(frac-0.5) <= 1e-9) return floor%2 === 0 ? floor : floor + 1;
+        return floor;
+      };
+      const convertMinor = (amount: number) => {
+        const scaled = (amount / srcFactor) * rate * tgtFactor;
+        return roundHalfEven(scaled);
+      };
+      const converted = {
+        gross: convertMinor(base.gross),
+        discount: convertMinor(base.discount),
+        net: convertMinor(base.net),
+        tax: convertMinor(base.tax),
+        tip: convertMinor(base.tip),
+        total: convertMinor(base.total),
+        perPerson: base.perPerson.map((p) => ({
+          id: p.id,
+          total: convertMinor(p.total)
+        })),
+        rate,
+        asOf: fxAsOf,
+        currency: targetCurrency
+      };
+      summaryData = { ...base, converted };
+    } catch (err) {
+      console.error('fx error', err);
+      fxRate = null;
+      fxAsOf = null;
+    }
+  };
+
   const submitReceipt = async (event: Event) => {
     const target = event.target as HTMLInputElement;
     if (!target.files?.[0]) return;
     receiptError = null;
     receiptUploading = true;
+    baselineTaxCents = room?.tax_cents || 0;
+    baselineSubtotalCents = items.reduce((sum, it) => {
+      const qty = it.quantity || 1;
+      const gross = Number(it.line_price_cents || 0);
+      const discount = Number(it.discount_cents || 0) * qty;
+      const net = Math.max(0, gross - discount);
+      return sum + net;
+    }, 0);
+    receiptIsAddon = (room && Object.keys(room.items || {}).length > 0) || baselineSubtotalCents > 0;
+    parsedTaxInput = '';
     try {
       const file = await convertToJpeg(target.files[0]);
       const form = new FormData();
@@ -483,7 +788,15 @@ let editableItems: {
       }
       const result = (await res.json()) as ReceiptParseResult;
       receiptResult = result;
-      warningBanner = result.warnings?.length > 0;
+      detectedCurrency = result?.currency ? result.currency.toUpperCase() : null;
+      receiptCurrencySelection = (detectedCurrency || roomCurrency || DEFAULT_CURRENCY).toUpperCase();
+      const parseFactor = factorFor(receiptCurrencySelection);
+      const parseExp = exponentFor(receiptCurrencySelection);
+      parsedTaxInput =
+        result?.tax_cents != null ? (Number(result.tax_cents) / parseFactor).toFixed(parseExp) : '';
+      receiptWarnings = Array.isArray(result.warnings) ? result.warnings.filter(Boolean) : [];
+      // Warnings mean "review recommended", not necessarily a broken import.
+      warningBanner = receiptWarnings.length > 0 || (typeof result.confidence === 'number' && result.confidence < 0.6);
       const agg = new Map<
         string,
         { name: string; qty: number; unit: number; discount: number; discountPct: number; line: number }
@@ -530,6 +843,8 @@ let editableItems: {
       const hasQty = Number.isFinite(qtyVal) && qtyVal > 0;
       const quantity = hasQty ? qtyVal : null;
 
+      const exp = exponentFor(roomCurrency);
+      const factor = factorFor(roomCurrency);
       let unitPrice = Number.parseFloat(item.unitPrice || '');
       let linePrice = Number.parseFloat(item.linePrice || '');
       let discountCents = Number.parseFloat(item.discountCents || ''); // per-unit
@@ -564,7 +879,7 @@ let editableItems: {
         }
       }
 
-      const fmt = (v: number) => (Number.isFinite(v) && v !== 0 ? v.toFixed(2) : '');
+      const fmt = (v: number) => (Number.isFinite(v) && v !== 0 ? v.toFixed(exp) : '');
       const next = { ...item };
       if (quantity !== null) next.quantity = String(quantity); // leave as-is if user cleared
       if (changed !== 'unitPrice') next.unitPrice = fmt(unitPrice);
@@ -577,11 +892,7 @@ let editableItems: {
 
   const confirmReceipt = () => {
     if (!receiptResult || !ws) return;
-    const toCents = (val: string) => {
-      const num = Number.parseFloat(val);
-      if (!Number.isFinite(num)) return 0;
-      return Math.round(num * 100);
-    };
+    const toCents = (val: string) => parseByCurrency(val, receiptCurrencySelection || roomCurrency);
     const aggregated = new Map<
       string,
       { name: string; qty: number; unit: number; disc: number; discPct: number }
@@ -643,14 +954,18 @@ let editableItems: {
             }
           })
         );
-        applyLocalOp({ kind: 'set_item', payload: opPayload });
+      applyLocalOp({ kind: 'set_item', payload: opPayload });
       }
     });
     showReceiptReview = false;
-    if (receiptResult?.tax_cents != null && ws && room) {
-      const tax = receiptResult.tax_cents;
-      const tip = room.tip_cents || 0;
-      const payload = { tax_cents: tax, tip_cents: tip };
+    const taxDelta = parsedTaxCents;
+    if (ws && room) {
+      if (receiptCurrencySelection && receiptCurrencySelection !== roomCurrency) {
+        changeCurrency(receiptCurrencySelection);
+      }
+      const currentTax = room.tax_cents || 0;
+      const newTax = receiptIsAddon ? currentTax + taxDelta : taxDelta;
+      const payload = { tax_cents: newTax, tip_cents: room.tip_cents || 0 };
       ws.send(
         JSON.stringify({
           type: 'op',
@@ -661,6 +976,11 @@ let editableItems: {
     }
     receiptResult = null;
     editableItems = [];
+    parsedTaxInput = '';
+    receiptWarnings = [];
+    warningBanner = false;
+    detectedCurrency = null;
+    receiptCurrencySelection = (roomCurrency || DEFAULT_CURRENCY).toUpperCase();
   };
 
   const parseCents = (value: string) => {
@@ -724,7 +1044,7 @@ let editableItems: {
       }
     }
 
-    const fmt = (v: number) => (Number.isFinite(v) && v !== 0 ? v.toFixed(2) : '');
+      const fmt = (v: number) => (Number.isFinite(v) && v !== 0 ? v.toFixed(exp) : '');
     const next = { ...itemForm };
     if (quantity !== null) next.quantity = String(quantity); // allow user to clear
     if (changed !== 'unitPrice') next.unitPrice = fmt(unitPrice);
@@ -958,6 +1278,32 @@ let editableItems: {
 
   $: items = room ? (Object.values(room.items) as Item[]) : [];
   $: participants = room ? (Object.values(room.participants) as Participant[]) : [];
+  $: initialsCounts = participants.reduce((acc, p) => {
+    const init = p.initials || initialsFromName(p.name);
+    acc[init] = (acc[init] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  $: initialsBadges = (() => {
+    const seen: Record<string, number> = {};
+    const badges: Record<string, string> = {};
+    participants.forEach((p) => {
+      const init = p.initials || initialsFromName(p.name);
+      seen[init] = (seen[init] || 0) + 1;
+      if ((initialsCounts[init] || 0) > 1) {
+        badges[p.id] = String(seen[init]);
+      }
+    });
+    return badges;
+  })();
+  $: receiptSubtotalCents = subtotalFromEditable(editableItems);
+  $: parsedTaxCents = parseByCurrency(parsedTaxInput, receiptCurrencySelection || roomCurrency);
+  $: projectedTaxCents = baselineTaxCents + parsedTaxCents;
+  $: receiptTaxPercent =
+    receiptSubtotalCents > 0 ? (parsedTaxCents / receiptSubtotalCents) * 100 : 0;
+  $: projectedTaxPercent =
+    baselineSubtotalCents + receiptSubtotalCents > 0
+      ? (projectedTaxCents / (baselineSubtotalCents + receiptSubtotalCents)) * 100
+      : 0;
 
   const toCents = (val: string) => Math.round((Number.parseFloat(val || '0') || 0) * 100);
   const preTaxSubtotal = (list: Item[]) => {
@@ -990,10 +1336,10 @@ let editableItems: {
   };
 </script>
 
-<div class="min-h-screen bg-surface-900 text-surface-50 pb-24">
+<div class="min-h-screen bg-surface-900 text-surface-50 pb-24 relative">
   {#if wsStatus !== 'connected'}
-    <div class="px-6 pt-3">
-      <div class="flex items-center gap-3 rounded-xl border border-warning-500/40 bg-warning-500/10 text-warning-100 text-xs px-3 py-2">
+    <div class="absolute top-3 inset-x-0 flex justify-center pointer-events-none z-50 px-4">
+      <div class="flex items-center gap-3 rounded-xl border border-warning-500/60 bg-warning-900/95 text-warning-50 text-xs px-3 py-2 shadow-xl pointer-events-auto">
         <span>⚠️</span>
         <span class="flex-1">
           {wsStatus === 'reconnecting' ? 'Reconnecting to room…' : 'Connecting…'}
@@ -1015,38 +1361,82 @@ let editableItems: {
   <header class="px-6 pt-6 pb-4 space-y-3">
     <div class="accent-gradient rounded-3xl p-5 shadow-2xl flex flex-col md:flex-row md:items-center md:justify-center gap-4">
       <div class="text-center flex-1 order-1">
-        <p class="text-sm text-white/70">Room</p>
+        <p class="text-sm text-white/70">Restaurant</p>
         <h1 class="text-2xl font-semibold text-white">{room?.name || 'Shared Bill'}</h1>
         <div class="flex items-center justify-center gap-3 mt-2 text-sm text-white/80 flex-wrap">
-          <span class="rounded-full bg-black/20 px-3 py-1 font-mono">Room code: {roomCode?.toUpperCase()}</span>
+          <span class="rounded-full bg-black/20 px-3 py-1 font-mono">Bill code: {roomCode?.toUpperCase()}</span>
           {#if qrUrl}
             <img src={qrUrl} alt="Join QR code" class="w-16 h-16 rounded-lg border border-white/20 bg-white/5" />
           {/if}
         </div>
       </div>
       <div class="flex flex-col items-center justify-center order-2 md:order-3 md:w-48">
-        <Avatar initials={identity.initials} color={colorHex(identity.colorSeed)} size={60} />
+        <Avatar
+          initials={identity.initials}
+          color={colorHex(identity.colorSeed)}
+          size={60}
+          badge={initialsBadges[identity.userId] ? String(initialsBadges[identity.userId]) : undefined}
+          title={identity.name}
+        />
         <div class="text-sm text-white mt-2">{identity.name || 'You'}</div>
         <div class="flex items-center justify-center gap-2 mt-3 w-full">
           <button class="action-btn action-btn-surface action-btn-compact text-xs sm:text-sm flex-1" on:click={() => { nameInput = identity.name; showNameModal = true; }}>
-            ✏️<span class="inline ml-1">Change name</span>
+            <svg class="inline-block align-middle" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" style="color:#eab308">
+              <path d="M12 20h9" />
+              <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z" />
+            </svg>
+            <span class="inline ml-1">Change name</span>
           </button>
         </div>
         <div class="flex items-center justify-center gap-2 mt-2 w-full">
           <button class="action-btn action-btn-surface action-btn-compact text-xs sm:text-sm flex-1" on:click={() => { roomNameInput = room?.name || ''; showRoomNameModal = true; }}>
-            🏷️<span class="inline ml-1">Rename room</span>
+            <svg class="inline-block align-middle" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 12l-8-8H6a2 2 0 0 0-2 2v6l8 8a2 2 0 0 0 2.8 0l5.2-5.2A2 2 0 0 0 20 12Z" />
+              <path d="M7.5 7.5h.01" />
+            </svg>
+            <span class="inline-block ml-1 whitespace-normal leading-tight text-left">
+              <span class="block">Rename</span>
+              <span class="block">restaurant</span>
+            </span>
           </button>
           <button class="action-btn action-btn-primary action-btn-compact text-xs sm:text-sm flex-1" on:click={() => { addPersonName = ''; showAddPersonModal = true; }}>
-            ➕<span class="inline ml-1">Add person</span>
+            <svg class="inline-block align-middle" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" style="color:#22c55e">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            <span class="inline-block ml-1 whitespace-normal leading-tight text-left">
+              <span class="block">Add</span>
+              <span class="block">person</span>
+            </span>
           </button>
         </div>
+      </div>
+    </div>
+    <div class="flex flex-col md:flex-row gap-3 items-center justify-center mt-2">
+      <div class="flex items-center gap-2">
+        <span class="text-sm text-white/70">Bill currency:</span>
+        <select
+          class="input bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-white text-sm"
+          bind:value={roomCurrency}
+          on:change={(e) => changeCurrency((e.target as HTMLSelectElement).value)}
+        >
+          {#each COMMON_CURRENCIES as c}
+            <option value={c.code}>{c.flag} {c.code} {c.symbol}</option>
+          {/each}
+        </select>
       </div>
     </div>
     <div class="flex gap-3 overflow-x-auto pt-2 justify-center">
       {#if room}
         {#each participants as participant}
           <div class="flex flex-col items-center text-xs relative w-14 shrink-0">
-            <Avatar initials={participant.initials} color={colorHex(participant.colorSeed)} size={36} />
+            <Avatar
+              initials={participant.initials}
+              color={colorHex(participant.colorSeed)}
+              size={36}
+              badge={initialsBadges[participant.id] ? String(initialsBadges[participant.id]) : undefined}
+              title={participant.name}
+            />
             <span
               class="absolute -right-1 -top-1 w-3 h-3 rounded-full border border-surface-900"
               style={`background:${participant.present ? '#22c55e' : '#6b7280'};`}
@@ -1058,7 +1448,13 @@ let editableItems: {
                 title="Remove"
                 on:click={() => removeParticipant(participant.id)}
               >
-                🗑
+                <svg class="inline-block align-middle" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" style="color:#ef4444">
+                  <path d="M3 6h18" />
+                  <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                  <path d="M10 11v6" />
+                  <path d="M14 11v6" />
+                </svg>
               </button>
             {/if}
           </div>
@@ -1069,8 +1465,13 @@ let editableItems: {
 
   <main class="px-6 space-y-4">
     {#if warningBanner}
-      <div class="rounded-xl bg-warning-500/20 text-warning-200 px-4 py-3 text-sm border border-warning-500/40">
-        Receipt import is incomplete—please review.
+      <div class="rounded-xl bg-warning-500/20 text-warning-200 px-4 py-3 text-sm border border-warning-500/40 flex items-center justify-between gap-3">
+        <div class="min-w-0">
+          Receipt parsed with {receiptWarnings.length} note{receiptWarnings.length === 1 ? '' : 's'}—review recommended.
+        </div>
+        <button class="btn btn-outline shrink-0" type="button" on:click={() => (showReceiptReview = true)}>
+          Review
+        </button>
       </div>
     {/if}
     {#if receiptError}
@@ -1082,9 +1483,22 @@ let editableItems: {
     <section class="space-y-3">
       <div class="flex items-center justify-between">
         <h2 class="text-lg font-semibold">Items</h2>
-        {#if room && Object.keys(room.items).length === 0}
-          <label class={`action-btn action-btn-surface action-btn-compact ${receiptUploading ? 'opacity-60 pointer-events-none' : ''}`}>
-            📷<span class="hidden sm:inline ml-1">{receiptUploading ? 'Uploading...' : 'Upload receipt'}</span>
+        {#if room}
+          <label
+            class={`action-btn action-btn-surface action-btn-compact ${receiptUploading ? 'opacity-60 pointer-events-none' : ''}`}
+          >
+            <svg class="inline-block align-middle" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 7h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z" />
+              <path d="M9 7l1.5-2.5h3L15 7" />
+              <circle cx="12" cy="13" r="3.5" />
+            </svg>
+            <span class="ml-1">
+              {receiptUploading
+                ? 'Uploading...'
+                : items.length > 0
+                  ? 'Add receipt'
+                  : 'Upload receipt'}
+            </span>
             <input type="file" class="hidden" accept="image/*" on:change={submitReceipt} />
           </label>
         {/if}
@@ -1111,24 +1525,30 @@ let editableItems: {
               >
                 {item.name}
               </p>
-              <p class="text-sm text-surface-200 whitespace-nowrap">{formatCents(item.line_price_cents)}</p>
+              <p class="text-sm text-surface-200 whitespace-nowrap">{formatAmount(item.line_price_cents)}</p>
               {#if item.discount_cents}
                 <p class="text-xs text-surface-300">
-                  Discount: {formatCents(item.discount_cents)} · Net: {formatCents(item.line_price_cents - item.discount_cents)}
+                  Discount: {formatAmount(item.discount_cents)} · Net: {formatAmount(item.line_price_cents - item.discount_cents)}
                 </p>
               {/if}
-              <p class="text-xs text-surface-400 flex flex-wrap items-center gap-1">
-                Assigned:
-                {#if room}
-                  {#each Object.entries(item.assigned || {}) as [uid, on]}
-                    {#if on}
-                      <span class="badge" style={`background:${colorHex(room.participants?.[uid]?.colorSeed)}; color:white;`}>
-                        {room.participants?.[uid]?.name || uid}
-                      </span>
-                    {/if}
-                  {/each}
-                {/if}
-              </p>
+              <div class="text-xs text-surface-400 flex flex-wrap items-center gap-2">
+                <span>Assigned:</span>
+                <div class="flex items-center gap-1 flex-wrap">
+                  {#if room}
+                    {#each Object.entries(item.assigned || {}) as [uid, on]}
+                      {#if on}
+                        <Avatar
+                          initials={room.participants?.[uid]?.initials || initialsFromName(room.participants?.[uid]?.name || uid)}
+                          color={colorHex(room.participants?.[uid]?.colorSeed)}
+                          badge={initialsBadges[uid] ? String(initialsBadges[uid]) : undefined}
+                          title={room.participants?.[uid]?.name}
+                          size={22}
+                        />
+                      {/if}
+                    {/each}
+                  {/if}
+                </div>
+              </div>
             </div>
             <div class="flex flex-col gap-2 mt-2 items-end flex-shrink-0 w-auto ml-2">
               <div class="flex gap-2 flex-wrap justify-end">
@@ -1141,15 +1561,56 @@ let editableItems: {
                     activeItemId = item.id;
                   }}
                 >
-                  👥<span class="hidden sm:inline ml-1">Assign</span>
+                  <svg class="inline-block align-middle" width="18" height="18" viewBox="0 0 34 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 1 1 0 7.75" />
+                    <g transform="translate(9,-1)" stroke="#22c55e" stroke-width="2.35">
+                      <line x1="18" y1="6" x2="18" y2="14" />
+                      <line x1="14" y1="10" x2="22" y2="10" />
+                    </g>
+                  </svg>
+                  <span class="hidden sm:inline ml-1">Assign</span>
                 </button>
                 <button
-                  class="action-btn action-btn-primary action-btn-compact"
+                  class={`action-btn ${item.assigned?.[identity.userId] ? 'action-btn-danger' : 'action-btn-primary'} action-btn-compact`}
                   title={item.assigned?.[identity.userId] ? 'Unassign me' : 'Assign to me'}
                   type="button"
                   on:click|stopPropagation={() => toggleAssign(item.id, identity.userId)}
                 >
-                  {item.assigned?.[identity.userId] ? '🚫' : '✅'}
+                  {#if item.assigned?.[identity.userId]}
+                    <svg
+                      class="inline-block align-middle"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.75"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      style="color:#ef4444"
+                    >
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                  {:else}
+                    <svg
+                      class="inline-block align-middle"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.75"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      style="color:#22c55e"
+                    >
+                      <line x1="12" y1="5" x2="12" y2="19" />
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                  {/if}
                   <span class="hidden sm:inline ml-1">{item.assigned?.[identity.userId] ? 'Unassign' : 'Me'}</span>
                 </button>
               </div>
@@ -1160,7 +1621,11 @@ let editableItems: {
                   type="button"
                   on:click|stopPropagation={() => openEditItemModal(item)}
                 >
-                  ✏️<span class="hidden sm:inline ml-1">Edit</span>
+                  <svg class="inline-block align-middle" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" style="color:#eab308">
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z" />
+                  </svg>
+                  <span class="hidden sm:inline ml-1">Edit</span>
                 </button>
                 <button
                   class="action-btn action-btn-surface action-btn-compact"
@@ -1168,7 +1633,11 @@ let editableItems: {
                   type="button"
                   on:click|stopPropagation={() => duplicateItem(item)}
                 >
-                  📄<span class="hidden sm:inline ml-1">Copy</span>
+                  <svg class="inline-block align-middle" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="11" height="11" rx="2" />
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                  </svg>
+                  <span class="hidden sm:inline ml-1">Copy</span>
                 </button>
                 <button
                   class="action-btn action-btn-danger action-btn-compact"
@@ -1176,7 +1645,14 @@ let editableItems: {
                   type="button"
                   on:click|stopPropagation={() => removeItem(item.id)}
                 >
-                  🗑<span class="hidden sm:inline ml-1">Delete</span>
+                  <svg class="inline-block align-middle" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" style="color:#ef4444">
+                    <path d="M3 6h18" />
+                    <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                    <path d="M10 11v6" />
+                    <path d="M14 11v6" />
+                  </svg>
+                  <span class="hidden sm:inline ml-1">Delete</span>
                 </button>
               </div>
             </div>
@@ -1188,8 +1664,8 @@ let editableItems: {
 
   <div class="fixed bottom-0 inset-x-0 bg-surface-900/90 border-t border-surface-800 px-6 py-3 flex gap-2 backdrop-blur">
     <button class="btn btn-primary flex-1" on:click={openNewItemModal}>Add Item</button>
-    <button class="btn btn-outline" on:click={() => { showTaxTipModal = true; taxInput = room?.tax_cents ? (room.tax_cents/100).toFixed(2) : ''; tipInput = room?.tip_cents ? (room.tip_cents/100).toFixed(2) : ''; }}>Tax/Tip</button>
-    <button class="btn btn-outline" on:click={() => { summaryData = computeSummary(); showSummary = true; }}>Summary</button>
+    <button class="btn btn-outline flex-1" on:click={() => { showTaxTipModal = true; const factor = factorFor(roomCurrency); const exp = exponentFor(roomCurrency); taxInput = room?.tax_cents ? (room.tax_cents/factor).toFixed(exp) : ''; tipInput = room?.tip_cents ? (room.tip_cents/factor).toFixed(exp) : ''; }}>Tax/Tip</button>
+    <button class="btn btn-outline flex-1" on:click={async () => { await buildSummary(); showSummary = true; }}>Summary</button>
   </div>
 
   {#if showAssign && activeItemId && room}
@@ -1203,14 +1679,51 @@ let editableItems: {
               on:click={() => toggleAssign(activeItemId!, participant.id)}
             >
               <div class="flex items-center gap-2">
-                <Avatar initials={participant.initials} color={colorHex(participant.colorSeed)} size={32} />
+                <Avatar
+                  initials={participant.initials}
+                  color={colorHex(participant.colorSeed)}
+                  size={32}
+                  badge={initialsBadges[participant.id] ? String(initialsBadges[participant.id]) : undefined}
+                  title={participant.name}
+                />
                 <span>{participant.name}</span>
               </div>
               {#if room?.items?.[activeItemId]}
                 {#if room.items[activeItemId].assigned?.[participant.id]}
-                  <span class="text-xs px-2 py-1 rounded-full bg-primary-500/20 text-primary-100 border border-primary-400/40">🚫 Unassign</span>
+                  <span class="text-xs px-2 py-1 rounded-full bg-error-500/20 text-error-100 border border-error-400/40 flex items-center gap-1">
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.75"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      style="color:#ef4444"
+                    >
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    Unassign
+                  </span>
                 {:else}
-                  <span class="text-xs px-2 py-1 rounded-full bg-surface-800 text-surface-200 border border-surface-700">✅ Assign</span>
+                  <span class="text-xs px-2 py-1 rounded-full bg-primary-500/20 text-primary-100 border border-primary-400/40 flex items-center gap-1">
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.75"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      style="color:#22c55e"
+                    >
+                      <line x1="12" y1="5" x2="12" y2="19" />
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    Assign
+                  </span>
                 {/if}
               {:else}
                 <span class="text-sm text-surface-500">Tap to toggle</span>
@@ -1228,17 +1741,50 @@ let editableItems: {
       <div class="glass-card w-full rounded-t-3xl p-6 space-y-4 max-h-[80vh] overflow-y-auto text-white">
         <h3 class="text-lg font-semibold">Review receipt</h3>
         <p class="text-sm text-surface-200">Edit aggregated lines before importing. Prices are gross (pre-discount).</p>
+        <div class="flex items-center justify-between gap-3 flex-wrap rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+          <div class="text-sm text-white/80">Receipt Currency</div>
+          <select
+            class="input bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-white text-sm"
+            bind:value={receiptCurrencySelection}
+            on:change={(e) => {
+              const next = ((e.target as HTMLSelectElement).value || '').toUpperCase();
+              receiptCurrencySelection = next || receiptCurrencySelection;
+              // keep parsed tax display aligned to the selected currency exponent
+              const exp = exponentFor(receiptCurrencySelection);
+              parsedTaxInput = parsedTaxInput ? Number.parseFloat(parsedTaxInput).toFixed(exp) : parsedTaxInput;
+            }}
+          >
+            {#each COMMON_CURRENCIES as c}
+              <option value={c.code}>{c.flag} {c.code} {c.symbol}</option>
+            {/each}
+          </select>
+          {#if detectedCurrency && detectedCurrency !== receiptCurrencySelection}
+            <button class="btn btn-outline" type="button" on:click={() => (receiptCurrencySelection = detectedCurrency!)}>
+              Use detected {detectedCurrency}
+            </button>
+          {/if}
+        </div>
+        {#if receiptWarnings.length > 0}
+          <div class="rounded-xl border border-warning-500/40 bg-warning-500/10 text-warning-200 p-3 text-sm space-y-1">
+            <div class="font-semibold">Notes from parser</div>
+            <ul class="list-disc list-inside space-y-1">
+              {#each receiptWarnings as w}
+                <li>{w}</li>
+              {/each}
+            </ul>
+          </div>
+        {/if}
         {#each editableItems as item, index}
           <div class="border border-surface-800 rounded-xl p-4 space-y-3">
             <label class="block space-y-1">
-              <span class="text-xs text-surface-300">Name</span>
+              <span class="text-xs text-surface-300">Item Name</span>
               <input class="input w-full" bind:value={editableItems[index].name} />
             </label>
-           <div class="grid grid-cols-2 gap-3">
-             <label class="block space-y-1">
-               <span class="text-xs text-surface-300">Quantity</span>
-               <input
-                 class="input w-full"
+            <div class="grid grid-cols-2 gap-3">
+              <label class="block space-y-1">
+                <span class="text-xs text-surface-300">Quantity</span>
+                <input
+                  class="input w-full"
                  type="number"
                  min="1"
                  step="1"
@@ -1247,36 +1793,36 @@ let editableItems: {
                />
              </label>
              <label class="block space-y-1">
-               <span class="text-xs text-surface-300">Unit price ($)</span>
-               <input
-                 class="input w-full"
-                 type="number"
-                 min="0"
-                 step="0.01"
-                 bind:value={editableItems[index].unitPrice}
-                 on:input={() => recalcDerived(index, 'unitPrice')}
-               />
-             </label>
-           </div>
-            <div class="grid grid-cols-2 gap-3">
-              <label class="block space-y-1">
-                <span class="text-xs text-surface-300">Gross line ($)</span>
+                <span class="text-xs text-surface-300">Unit Price ({symbolFor(receiptCurrencySelection) || receiptCurrencySelection})</span>
                 <input
                   class="input w-full"
                   type="number"
                   min="0"
-                  step="0.01"
+                 step={1 / factorFor(receiptCurrencySelection)}
+                  bind:value={editableItems[index].unitPrice}
+                  on:input={() => recalcDerived(index, 'unitPrice')}
+                />
+              </label>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <label class="block space-y-1">
+                <span class="text-xs text-surface-300">Total ({symbolFor(receiptCurrencySelection) || receiptCurrencySelection})</span>
+                <input
+                  class="input w-full"
+                  type="number"
+                  min="0"
+                  step={1 / factorFor(receiptCurrencySelection)}
                   bind:value={editableItems[index].linePrice}
                   on:input={() => recalcDerived(index, 'linePrice')}
                 />
               </label>
               <label class="block space-y-1">
-                <span class="text-xs text-surface-300">Discount ($ per unit)</span>
+                <span class="text-xs text-surface-300">Discount ({symbolFor(receiptCurrencySelection) || receiptCurrencySelection} per unit)</span>
                 <input
                   class="input w-full"
                   type="number"
                   min="0"
-                  step="0.01"
+                  step={1 / factorFor(receiptCurrencySelection)}
                   bind:value={editableItems[index].discountCents}
                   on:input={() => recalcDerived(index, 'discountCents')}
                 />
@@ -1295,10 +1841,100 @@ let editableItems: {
                 />
               </label>
             </div>
+            {#if editableItems[index]}
+              {#if true}
+                <div class="rounded-lg bg-surface-800/70 border border-surface-700 px-3 py-2 text-sm flex flex-col gap-1">
+                  {#if editableItems[index]}
+                    <div class="flex items-center justify-between">
+                      <span class="text-surface-300">Discounted unit</span>
+                      <span class="font-semibold text-white">
+                        {formatAmount(discountedUnitAndNetFromEditable(editableItems[index]).netUnit)}
+                      </span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <span class="text-surface-300">Total after discount</span>
+                      <span class="font-semibold text-white">
+                        {formatAmount(discountedUnitAndNetFromEditable(editableItems[index]).netTotal)}
+                      </span>
+                    </div>
+                  {/if}
+                </div>
+              {/if}
+            {/if}
+            <div class="flex justify-end">
+              <button
+                class="action-btn action-btn-danger action-btn-compact"
+                on:click={() => removeEditableItem(index)}
+                type="button"
+              >
+                <svg class="inline-block align-middle" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" style="color:#ef4444">
+                  <path d="M3 6h18" />
+                  <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                  <path d="M10 11v6" />
+                  <path d="M14 11v6" />
+                </svg>
+                <span class="ml-1">Remove</span>
+              </button>
+            </div>
           </div>
         {/each}
-        <button class="btn btn-primary w-full" on:click={confirmReceipt}>Import Items</button>
-        <button class="btn btn-outline w-full" on:click={() => (showReceiptReview = false)}>Cancel</button>
+        <div class="border border-surface-800 rounded-xl p-4 space-y-3">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <p class="text-sm font-semibold">This receipt tax</p>
+              <p class="text-xs text-surface-300">
+                Receipt subtotal: {formatAmount(receiptSubtotalCents)} · Tax %
+                {receiptSubtotalCents > 0 ? ` ${receiptTaxPercent.toFixed(2)}%` : ' --%'}
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-surface-300">$</span>
+              <input
+                class="input w-28 text-right"
+                inputmode="decimal"
+                bind:value={parsedTaxInput}
+                placeholder="0.00"
+              />
+            </div>
+          </div>
+          {#if receiptIsAddon}
+            <div class="mt-3 flex items-start justify-between gap-3">
+              <div>
+                <p class="text-sm font-semibold">Projected total tax</p>
+                <p class="text-xs text-surface-300">
+                  {formatAmount(baselineTaxCents)} + {formatAmount(parsedTaxCents)} = {formatAmount(projectedTaxCents)}
+                </p>
+              </div>
+              <div class="text-right text-sm">
+                <div class="font-semibold">{formatAmount(projectedTaxCents)}</div>
+                <div class="text-xs text-surface-300">
+                  Total tax %:
+                  {baselineSubtotalCents + receiptSubtotalCents > 0
+                    ? `${projectedTaxPercent.toFixed(2)}%`
+                    : '--%'}
+                </div>
+              </div>
+            </div>
+          {:else}
+            <div class="mt-2 text-xs text-surface-300">
+              Tax % of this receipt:
+              {receiptSubtotalCents > 0 ? `${receiptTaxPercent.toFixed(2)}%` : '--%'}
+            </div>
+          {/if}
+        </div>
+        <button class="btn btn-primary w-full" on:click={confirmReceipt}>Import items & tax</button>
+        <button
+          class="btn btn-outline w-full"
+          on:click={() => {
+            showReceiptReview = false;
+            receiptWarnings = [];
+            warningBanner = false;
+            receiptCurrencySelection = (roomCurrency || DEFAULT_CURRENCY).toUpperCase();
+          }}
+        >
+          Cancel
+        </button>
       </div>
     </div>
   {/if}
@@ -1308,7 +1944,7 @@ let editableItems: {
       <div class="glass-card w-full rounded-t-3xl p-6 space-y-4 text-white">
         <h3 class="text-lg font-semibold">{itemModalMode === 'edit' ? 'Edit item' : 'Add item'}</h3>
         <label class="block">
-          <span class="text-sm text-surface-200">Item name</span>
+          <span class="text-sm text-surface-200">Item Name</span>
           <input class="input w-full" bind:value={itemForm.name} placeholder="Cheeseburger" />
         </label>
         {#if itemModalMode === 'new'}
@@ -1325,7 +1961,7 @@ let editableItems: {
         {/if}
         <div class="grid grid-cols-2 gap-3">
           <label class="block">
-            <span class="text-sm text-surface-200">Unit price ($)</span>
+            <span class="text-sm text-surface-200">Unit Price ({symbolFor(roomCurrency) || roomCurrency})</span>
             <input
               class="input w-full"
               bind:value={itemForm.unitPrice}
@@ -1336,7 +1972,7 @@ let editableItems: {
           </label>
           {#if itemModalMode === 'new'}
             <label class="block">
-              <span class="text-sm text-surface-200">Line price ($)</span>
+              <span class="text-sm text-surface-200">Total ({symbolFor(roomCurrency) || roomCurrency})</span>
               <input
                 class="input w-full"
                 bind:value={itemForm.linePrice}
@@ -1349,7 +1985,7 @@ let editableItems: {
         </div>
         <div class="grid grid-cols-2 gap-3">
           <label class="block">
-            <span class="text-sm text-surface-200">Discount ($)</span>
+            <span class="text-sm text-surface-200">Discount ({symbolFor(roomCurrency) || roomCurrency})</span>
             <input
               class="input w-full"
               bind:value={itemForm.discountCents}
@@ -1369,6 +2005,18 @@ let editableItems: {
             />
           </label>
         </div>
+        <div class="rounded-lg bg-surface-800/70 border border-surface-700 px-3 py-2 text-sm flex items-center justify-between">
+          <div class="flex flex-col gap-1 w-full">
+            <div class="flex items-center justify-between">
+              <span class="text-surface-300">Discounted unit</span>
+              <span class="font-semibold text-white">{formatAmount(discountedUnitAndNetFromItemForm().netUnit)}</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-surface-300">Total after discount</span>
+              <span class="font-semibold text-white">{formatAmount(discountedUnitAndNetFromItemForm().netTotal)}</span>
+            </div>
+          </div>
+        </div>
         <div class="flex gap-3">
           <button class="btn btn-outline w-full" on:click={() => (showItemModal = false)}>Cancel</button>
           <button class="btn btn-primary w-full" on:click={submitItemModal} disabled={!itemForm.name.trim()}>
@@ -1384,7 +2032,7 @@ let editableItems: {
       <div class="glass-card w-full rounded-t-3xl p-6 space-y-4 text-white">
         <h3 class="text-lg font-semibold">Tax / Tip</h3>
         <p class="text-xs text-surface-300">
-          Items subtotal: {preTaxSubtotalCents ? formatCents(preTaxSubtotalCents) : '$0.00'}
+          Items subtotal: {preTaxSubtotalCents ? formatAmount(preTaxSubtotalCents) : '$0.00'}
         </p>
         <label class="block space-y-1">
           <span class="text-sm text-surface-200">Tax ($)</span>
@@ -1434,15 +2082,46 @@ let editableItems: {
   {#if showSummary && summaryData}
     <div class="fixed inset-0 bg-black/40 flex items-end justify-center">
       <div class="glass-card w-full rounded-t-3xl p-6 space-y-4 text-white max-h-[80vh] overflow-y-auto">
-        <h3 class="text-lg font-semibold">Summary</h3>
-        <div class="text-sm text-surface-200 space-y-1">
-          <p>Gross: {formatCents(summaryData.gross)}</p>
-          <p>Discounts: -{formatCents(summaryData.discount)}</p>
-          <p>Net: {formatCents(summaryData.net)}</p>
-          <p>Tax: {formatCents(summaryData.tax)}</p>
-          <p>Tip: {formatCents(summaryData.tip)}</p>
-          <p class="font-semibold text-white">Total: {formatCents(summaryData.total)}</p>
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+          <h3 class="text-lg font-semibold">Summary</h3>
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-white/70">Summary in:</span>
+            <select
+              class="input bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-white text-sm"
+              bind:value={targetCurrency}
+              on:change={async (e) => {
+                changeTargetCurrency((e.target as HTMLSelectElement).value);
+                await buildSummary();
+              }}
+            >
+              {#each COMMON_CURRENCIES as c}
+                <option value={c.code}>{c.flag} {c.code} {c.symbol}</option>
+              {/each}
+            </select>
+          </div>
         </div>
+        <div class="text-sm text-surface-200 space-y-1">
+          <p>Gross: {formatAmount(summaryData.gross)}</p>
+          <p>Discounts: -{formatAmount(summaryData.discount)}</p>
+          <p>Net: {formatAmount(summaryData.net)}</p>
+          <p>Tax: {formatAmount(summaryData.tax)}</p>
+          <p>Tip: {formatAmount(summaryData.tip)}</p>
+          <p class="font-semibold text-white">Total: {formatAmount(summaryData.total)}</p>
+        </div>
+        {#if summaryData.converted}
+          <div class="text-sm text-primary-200 space-y-1 border border-primary-500/40 rounded-xl p-3 bg-primary-500/10">
+            <div class="flex justify-between items-center">
+              <span class="font-semibold">Converted to {summaryData.converted.currency}</span>
+              <span class="text-xs opacity-80">rate {summaryData.converted.rate?.toFixed(4)}{summaryData.converted.asOf ? ` · as of ${summaryData.converted.asOf}` : ''}</span>
+            </div>
+            <p>Gross: {formatCurrency(summaryData.converted.gross, targetCurrency, symbolFor(targetCurrency), exponentFor(targetCurrency))}</p>
+            <p>Discounts: -{formatCurrency(summaryData.converted.discount, targetCurrency, symbolFor(targetCurrency), exponentFor(targetCurrency))}</p>
+            <p>Net: {formatCurrency(summaryData.converted.net, targetCurrency, symbolFor(targetCurrency), exponentFor(targetCurrency))}</p>
+            <p>Tax: {formatCurrency(summaryData.converted.tax, targetCurrency, symbolFor(targetCurrency), exponentFor(targetCurrency))}</p>
+            <p>Tip: {formatCurrency(summaryData.converted.tip, targetCurrency, symbolFor(targetCurrency), exponentFor(targetCurrency))}</p>
+            <p class="font-semibold text-white">Total: {formatCurrency(summaryData.converted.total, targetCurrency, symbolFor(targetCurrency), exponentFor(targetCurrency))}</p>
+          </div>
+        {/if}
         <div class="space-y-3">
           {#each summaryData.perPerson as person}
             <div class="border border-surface-800 rounded-xl p-3 space-y-2">
@@ -1454,25 +2133,33 @@ let editableItems: {
                 {#each person.items as item}
                   <div class="flex justify-between">
                     <span>{item.name}</span>
-                    <span>{formatCents(item.share_cents)}</span>
+                    <span>{formatAmount(item.share_cents)}</span>
                   </div>
                 {/each}
                 <div class="flex justify-between font-semibold text-white">
                   <span>Items subtotal</span>
-                  <span>{formatCents(person.itemsTotal)}</span>
+                  <span>{formatAmount(person.itemsTotal)}</span>
                 </div>
                 <div class="flex justify-between">
                   <span>Tax share</span>
-                  <span>{formatCents(person.taxShare)}</span>
+                  <span>{formatAmount(person.taxShare)}</span>
                 </div>
                 <div class="flex justify-between">
                   <span>Tip share</span>
-                  <span>{formatCents(person.tipShare)}</span>
+                  <span>{formatAmount(person.tipShare)}</span>
                 </div>
                 <div class="flex justify-between font-semibold text-white">
                   <span>Total</span>
-                  <span>{formatCents(person.total)}</span>
+                  <span>{formatAmount(person.total)}</span>
                 </div>
+                {#if summaryData.converted}
+                  {#each summaryData.converted.perPerson.filter((p) => p.id === person.id) as conv}
+                    <div class="flex justify-between text-primary-200 font-semibold">
+                      <span>Total ({summaryData.converted.currency})</span>
+                      <span>{formatCurrency(conv.total, targetCurrency, symbolFor(targetCurrency), exponentFor(targetCurrency))}</span>
+                    </div>
+                  {/each}
+                {/if}
               </div>
             </div>
           {/each}
@@ -1500,8 +2187,8 @@ let editableItems: {
   {#if showRoomNameModal}
     <div class="fixed inset-0 bg-black/40 flex items-end justify-center">
       <div class="glass-card w-full rounded-t-3xl p-6 space-y-4 text-white">
-        <h3 class="text-lg font-semibold">Rename room</h3>
-        <input class="input w-full" bind:value={roomNameInput} placeholder="Room name" />
+        <h3 class="text-lg font-semibold">Rename restaurant</h3>
+        <input class="input w-full" bind:value={roomNameInput} placeholder="Restaurant name" />
         <div class="flex gap-3">
           <button class="btn btn-outline w-full" on:click={() => (showRoomNameModal = false)}>Cancel</button>
           <button

@@ -73,7 +73,7 @@
       }}
     >
       <h2 class="text-xl font-semibold text-white">Create a new bill</h2>
-      <p class="text-surface-200">Start a shared room and invite your crew.</p>
+      <p class="text-surface-200">Start a shared bill and invite your crew.</p>
       <button class="btn btn-primary w-full" on:click={() => (showCreate = true)}>Create Bill</button>
     </div>
 
@@ -90,7 +90,7 @@
       }}
     >
       <h2 class="text-xl font-semibold text-white">Join an existing bill</h2>
-      <p class="text-surface-200">Enter a room code to jump in.</p>
+      <p class="text-surface-200">Enter a bill code to jump in.</p>
       <button class="btn btn-secondary w-full" on:click={() => (showJoin = true)}>Join Bill</button>
     </div>
   </main>
@@ -104,12 +104,12 @@
           <input class="input w-full" bind:value={createName} placeholder="Alex" />
         </label>
         <label class="block">
-          <span class="text-sm text-surface-200">Bill name (optional)</span>
+          <span class="text-sm text-surface-200">Restaurant name</span>
           <input class="input w-full" bind:value={billName} placeholder="Dinner at Sora" />
         </label>
         <div class="flex gap-3">
           <button class="btn btn-outline w-full" on:click={() => (showCreate = false)}>Cancel</button>
-          <button class="btn btn-primary w-full" on:click={submitCreate} disabled={!createName}>Start</button>
+          <button class="btn btn-primary w-full" on:click={submitCreate} disabled={!createName || !billName}>Start</button>
         </div>
       </div>
     </div>
@@ -120,7 +120,7 @@
       <div class="glass-card w-full rounded-t-3xl p-6 space-y-4 text-white">
         <h3 class="text-lg font-semibold">Join Bill</h3>
         <label class="block">
-          <span class="text-sm text-surface-200">Room code</span>
+          <span class="text-sm text-surface-200">Bill code</span>
           <input class="input w-full uppercase" bind:value={joinCode} placeholder="AB12CD" />
         </label>
         <label class="block">

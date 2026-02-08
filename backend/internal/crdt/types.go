@@ -6,30 +6,33 @@ import (
 )
 
 type RoomDoc struct {
-	RoomID       string                  `json:"room_id"`
-	Name         string                  `json:"name"`
-	Items        map[string]*Item        `json:"items"`
-	Participants map[string]*Participant `json:"participants"`
-	TaxCents     int                     `json:"tax_cents"`
-	TipCents     int                     `json:"tip_cents"`
-	Seq          int64                   `json:"seq"`
-	UpdatedAt    int64                   `json:"updated_at"`
-	Tombstones   map[string]int64        `json:"tombstones"`
+	RoomID                string                  `json:"room_id"`
+	Name                  string                  `json:"name"`
+	Items                 map[string]*Item        `json:"items"`
+	Participants          map[string]*Participant `json:"participants"`
+	TaxCents              int                     `json:"tax_cents"`
+	TipCents              int                     `json:"tip_cents"`
+	Currency              string                  `json:"currency,omitempty"`
+	TargetCurrency        string                  `json:"target_currency,omitempty"`
+	Seq                   int64                   `json:"seq"`
+	UpdatedAt             int64                   `json:"updated_at"`
+	Tombstones            map[string]int64        `json:"tombstones"`
+	ParticipantTombstones map[string]int64        `json:"participant_tombstones,omitempty"`
 }
 
 type Item struct {
-	ID              string           `json:"id"`
-	Name            string           `json:"name"`
-	Quantity        int              `json:"quantity"`
-	UnitPriceCents  int              `json:"unit_price_cents"`
-	LinePriceCents  int              `json:"line_price_cents"`
-	DiscountCents   int              `json:"discount_cents"`
-	DiscountPercent float64          `json:"discount_percent"`
-	Assigned        map[string]bool  `json:"assigned"`
-	UpdatedAt       int64            `json:"updated_at"`
-	RawText         string           `json:"raw_text"`
-	Warnings        []string         `json:"warnings"`
-	Meta            map[string]any   `json:"meta"`
+	ID              string          `json:"id"`
+	Name            string          `json:"name"`
+	Quantity        int             `json:"quantity"`
+	UnitPriceCents  int             `json:"unit_price_cents"`
+	LinePriceCents  int             `json:"line_price_cents"`
+	DiscountCents   int             `json:"discount_cents"`
+	DiscountPercent float64         `json:"discount_percent"`
+	Assigned        map[string]bool `json:"assigned"`
+	UpdatedAt       int64           `json:"updated_at"`
+	RawText         string          `json:"raw_text"`
+	Warnings        []string        `json:"warnings"`
+	Meta            map[string]any  `json:"meta"`
 }
 
 type Participant struct {
@@ -51,11 +54,14 @@ type Op struct {
 
 func NewRoom(roomID, name string) *RoomDoc {
 	return &RoomDoc{
-		RoomID:       roomID,
-		Name:         name,
-		Items:        map[string]*Item{},
-		Participants: map[string]*Participant{},
-		Tombstones:   map[string]int64{},
-		UpdatedAt:    time.Now().UnixMilli(),
+		RoomID:                roomID,
+		Name:                  name,
+		Items:                 map[string]*Item{},
+		Participants:          map[string]*Participant{},
+		Currency:              "USD",
+		TargetCurrency:        "USD",
+		Tombstones:            map[string]int64{},
+		ParticipantTombstones: map[string]int64{},
+		UpdatedAt:             time.Now().UnixMilli(),
 	}
 }

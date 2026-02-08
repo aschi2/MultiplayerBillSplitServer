@@ -7,6 +7,10 @@ export const initialsFromName = (name: string): string => {
 
 export const colorFromSeed = (seed: string): string => `#${seed.slice(0, 6)}`;
 
-export const formatCents = (cents: number): string => {
-  return `$${(cents / 100).toFixed(2)}`;
+export const formatCurrency = (minorUnits: number, code = 'USD', symbol = '$', exponent = 2): string => {
+  const factor = Math.pow(10, exponent);
+  const value = minorUnits / factor;
+  const fixed = value.toFixed(exponent);
+  const prefix = symbol || code;
+  return `${prefix}${fixed}`;
 };

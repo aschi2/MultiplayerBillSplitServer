@@ -25,6 +25,8 @@ export type RoomDoc = {
   participants: Record<string, Participant>;
   tax_cents: number;
   tip_cents: number;
+  currency?: string;
+  target_currency?: string;
   seq: number;
 };
 
@@ -44,6 +46,7 @@ export type ReceiptParseResult = {
   subtotal_cents: number | null;
   tax_cents: number | null;
   total_cents: number | null;
+  currency?: string | null;
   fees?: string[];
   warnings: string[];
   confidence: number;

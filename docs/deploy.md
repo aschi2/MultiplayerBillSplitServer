@@ -39,7 +39,7 @@ CSRF_SECRET=$(openssl rand -hex 32)
 cat > .env <<EOF
 NODE_ENV=production
 PUBLIC_BASE_URL=https://bill.thetravelbug.club
-ROOM_TTL_SECONDS=14400
+ROOM_TTL_SECONDS=86400
 
 # Backend
 BACKEND_PORT=8080

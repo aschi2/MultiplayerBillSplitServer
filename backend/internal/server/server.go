@@ -46,6 +46,7 @@ func (s *Server) Routes() http.Handler {
 	mux.HandleFunc("/api/create-room", s.handleCreateRoom)
 	mux.HandleFunc("/api/join-room", s.handleJoinRoom)
 	mux.HandleFunc("/api/receipt/parse", s.handleReceiptParse)
+	mux.HandleFunc("/api/fx", s.handleFX)
 	mux.HandleFunc("/ws/", s.handleWS)
 	return s.withCORS(mux)
 }
@@ -59,12 +60,15 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 type CreateRoomRequest struct {
 	Name     string `json:"name"`
 	BillName string `json:"bill_name"`
+	Currency string `json:"currency"`
 }
 
 type CreateRoomResponse struct {
-	RoomCode string `json:"room_code"`
-	UserID   string `json:"user_id"`
-	JoinToken string `json:"join_token"`
+	RoomCode       string `json:"room_code"`
+	UserID         string `json:"user_id"`
+	JoinToken      string `json:"join_token"`
+	Currency       string `json:"currency"`
+	TargetCurrency string `json:"target_currency"`
 }
 
 func (s *Server) handleCreateRoom(w http.ResponseWriter, r *http.Request) {
@@ -80,6 +84,10 @@ func (s *Server) handleCreateRoom(w http.ResponseWriter, r *http.Request) {
 	roomCode := randomCode(6)
 	userID := uuid.NewString()
 	room := crdt.NewRoom(roomCode, req.BillName)
+	if req.Currency != "" {
+		room.Currency = strings.ToUpper(req.Currency)
+		room.TargetCurrency = room.Currency
+	}
 	participant := crdt.Participant{
 		ID:        userID,
 		Name:      req.Name,
@@ -103,7 +111,13 @@ func (s *Server) handleCreateRoom(w http.ResponseWriter, r *http.Request) {
 	s.hub.broadcast(roomCode, map[string]any{"type": "op", "seq": seq, "op": op})
 
 	joinToken := s.signJoinToken(roomCode, userID)
-	writeJSON(w, CreateRoomResponse{RoomCode: roomCode, UserID: userID, JoinToken: joinToken})
+	writeJSON(w, CreateRoomResponse{
+		RoomCode:       roomCode,
+		UserID:         userID,
+		JoinToken:      joinToken,
+		Currency:       room.Currency,
+		TargetCurrency: room.TargetCurrency,
+	})
 }
 
 type JoinRoomRequest struct {
@@ -114,9 +128,11 @@ type JoinRoomRequest struct {
 }
 
 type JoinRoomResponse struct {
-	RoomCode string `json:"room_code"`
-	UserID   string `json:"user_id"`
-	JoinToken string `json:"join_token"`
+	RoomCode       string `json:"room_code"`
+	UserID         string `json:"user_id"`
+	JoinToken      string `json:"join_token"`
+	Currency       string `json:"currency"`
+	TargetCurrency string `json:"target_currency"`
 }
 
 func (s *Server) handleJoinRoom(w http.ResponseWriter, r *http.Request) {
@@ -182,7 +198,13 @@ func (s *Server) handleJoinRoom(w http.ResponseWriter, r *http.Request) {
 	s.hub.broadcast(req.RoomCode, map[string]any{"type": "op", "seq": newSeq, "op": op})
 
 	joinToken := s.signJoinToken(req.RoomCode, userID)
-	writeJSON(w, JoinRoomResponse{RoomCode: req.RoomCode, UserID: userID, JoinToken: joinToken})
+	writeJSON(w, JoinRoomResponse{
+		RoomCode:       req.RoomCode,
+		UserID:         userID,
+		JoinToken:      joinToken,
+		Currency:       room.Currency,
+		TargetCurrency: room.TargetCurrency,
+	})
 }
 
 func (s *Server) handleReceiptParse(w http.ResponseWriter, r *http.Request) {
@@ -190,9 +212,9 @@ func (s *Server) handleReceiptParse(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	if s.config.OpenAIKey == "" {
+	if s.config.GeminiKey == "" && s.config.OpenAIKey == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		writeJSON(w, map[string]any{"error": "OPENAI_API_KEY not configured"})
+		writeJSON(w, map[string]any{"error": "No LLM API key configured"})
 		return
 	}
 	file, header, err := r.FormFile("file")
@@ -221,7 +243,12 @@ func (s *Server) handleReceiptParse(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, map[string]any{"error": "HEIC images aren't supported yet. Please upload a JPEG or PNG."})
 		return
 	}
-	result, err := callOpenAIReceiptParse(r.Context(), s.config.OpenAIKey, data, contentType)
+	var result *ReceiptParseResult
+	if s.config.GeminiKey != "" {
+		result, err = callGeminiReceiptParse(r.Context(), s.config.GeminiKey, data, contentType)
+	} else {
+		result, err = callOpenAIReceiptParse(r.Context(), s.config.OpenAIKey, data, contentType)
+	}
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		writeJSON(w, map[string]any{"error": err.Error()})

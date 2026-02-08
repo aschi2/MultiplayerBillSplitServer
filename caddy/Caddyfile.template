@@ -2,6 +2,19 @@
     encode zstd gzip
     tls {{TLS_DIRECTIVE}}
 
+    # Prevent edge caching of HTML when Cloudflare "Cache Everything" rules are enabled.
+    # Immutable build assets remain cacheable forever.
+    @immutable path /_app/immutable/*
+    header @immutable Cache-Control "public, max-age=31536000, immutable"
+
+    @appmeta path /_app/version.json /_app/manifest.json /_app/*
+    header @appmeta Cache-Control "no-cache"
+
+    @html {
+        not path /api/* /ws/* /_app/*
+    }
+    header @html Cache-Control "no-store"
+
     @api path /api/*
     reverse_proxy @api backend:8080
 

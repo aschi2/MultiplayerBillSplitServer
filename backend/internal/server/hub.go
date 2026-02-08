@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 	"sync"
 	"time"
@@ -49,6 +50,12 @@ func (h *Hub) loadDoc(ctx context.Context, roomID string) (*crdt.RoomDoc, int64)
 	if room == nil {
 		room = crdt.NewRoom(roomID, "")
 		seq = 0
+	}
+	if room.ParticipantTombstones == nil {
+		room.ParticipantTombstones = map[string]int64{}
+	}
+	if room.Tombstones == nil {
+		room.Tombstones = map[string]int64{}
 	}
 	if ops, err := h.store.LoadOps(ctx, roomID, seq); err == nil {
 		for _, op := range ops {
@@ -122,6 +129,7 @@ func (h *Hub) HandleWS(w http.ResponseWriter, r *http.Request, roomID string) {
 		}
 		switch message.Type {
 		case "op":
+			opStart := time.Now()
 			if message.Op.ActorID != "" {
 				actorID = message.Op.ActorID
 				h.trackActor(roomID, conn, actorID)
@@ -133,25 +141,51 @@ func (h *Hub) HandleWS(w http.ResponseWriter, r *http.Request, roomID string) {
 				message.Op.Timestamp = time.Now().UnixMilli()
 			}
 			// refresh doc to latest snapshot + pending ops
+			docStart := time.Now()
 			doc, _ := h.loadDoc(ctx, roomID)
+			docLoadMs := time.Since(docStart).Milliseconds()
 
+			appendStart := time.Now()
 			seq, err := h.store.AppendOp(ctx, roomID, message.Op)
 			if err != nil {
+				log.Printf("ws op append failed room=%s kind=%s actor=%s err=%v load_ms=%d", roomID, message.Op.Kind, message.Op.ActorID, err, docLoadMs)
 				continue
 			}
+			appendMs := time.Since(appendStart).Milliseconds()
+
+			applyStart := time.Now()
 			crdt.ApplyOp(doc, message.Op)
 			h.store.SaveSnapshot(ctx, roomID, doc, seq)
+			applyMs := time.Since(applyStart).Milliseconds()
+
+			broadcastStart := time.Now()
 			h.broadcast(roomID, map[string]any{
 				"type": "op",
 				"seq":  seq,
 				"op":   message.Op,
 			})
+			broadcastMs := time.Since(broadcastStart).Milliseconds()
+
+			ackStart := time.Now()
 			conn.SetWriteDeadline(time.Now().Add(wsWriteWait))
 			conn.WriteJSON(map[string]any{"type": "ack", "seq": seq})
+			ackMs := time.Since(ackStart).Milliseconds()
+
+			totalMs := time.Since(opStart).Milliseconds()
+			log.Printf(
+				"ws op room=%s seq=%d actor=%s kind=%s load_ms=%d append_ms=%d apply_ms=%d broadcast_ms=%d ack_ms=%d total_ms=%d",
+				roomID, seq, message.Op.ActorID, message.Op.Kind, docLoadMs, appendMs, applyMs, broadcastMs, ackMs, totalMs,
+			)
 		case "resync":
+			resyncStart := time.Now()
 			doc, currentSeq := h.loadDoc(ctx, roomID)
+			loadMs := time.Since(resyncStart).Milliseconds()
 			conn.SetWriteDeadline(time.Now().Add(wsWriteWait))
+			writeStart := time.Now()
 			conn.WriteJSON(map[string]any{"type": "snapshot", "seq": currentSeq, "doc": doc})
+			writeMs := time.Since(writeStart).Milliseconds()
+			totalMs := time.Since(resyncStart).Milliseconds()
+			log.Printf("ws resync room=%s actor=%s seq=%d load_ms=%d write_ms=%d total_ms=%d", roomID, actorID, currentSeq, loadMs, writeMs, totalMs)
 		case "ping":
 			conn.SetWriteDeadline(time.Now().Add(wsWriteWait))
 			conn.WriteJSON(map[string]any{"type": "pong", "ts": time.Now().UnixMilli()})
@@ -343,6 +377,9 @@ func (h *Hub) broadcast(roomID string, payload any) {
 	h.clientsMu.Lock()
 	defer h.clientsMu.Unlock()
 	for conn := range h.clients[roomID] {
-		conn.WriteMessage(websocket.TextMessage, message)
+		if err := conn.WriteMessage(websocket.TextMessage, message); err != nil {
+			// ignore write errors; connection checker will clean up
+			continue
+		}
 	}
 }

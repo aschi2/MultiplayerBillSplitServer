@@ -17,7 +17,9 @@ type Config struct {
 	CookieSecure       bool
 	CookieDomain       string
 	OpenAIKey          string
+	GeminiKey          string
 	PublicBaseURL      string
+	ECBRatesURL        string
 }
 
 func LoadConfig() Config {
@@ -27,11 +29,13 @@ func LoadConfig() Config {
 		SessionSecret:      os.Getenv("SESSION_SECRET"),
 		JoinTokenKey:       os.Getenv("JOIN_TOKEN_SIGNING_KEY"),
 		CorsAllowedOrigins: splitCSV(os.Getenv("CORS_ALLOWED_ORIGINS")),
-		RoomTTL:            time.Duration(getenvInt("ROOM_TTL_SECONDS", 14400)) * time.Second,
+		RoomTTL:            time.Duration(getenvInt("ROOM_TTL_SECONDS", 86400)) * time.Second, // default 24 hours
 		CookieSecure:       getenvBool("COOKIE_SECURE", true),
 		CookieDomain:       os.Getenv("COOKIE_DOMAIN"),
 		OpenAIKey:          os.Getenv("OPENAI_API_KEY"),
+		GeminiKey:          os.Getenv("GEMINI_API_KEY"),
 		PublicBaseURL:      getenv("PUBLIC_BASE_URL", "https://localhost"),
+		ECBRatesURL:        getenv("ECB_RATES_URL", "https://api.exchangerate.host/latest"),
 	}
 }
 
