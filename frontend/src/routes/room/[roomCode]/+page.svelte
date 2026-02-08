@@ -1316,7 +1316,10 @@ const pendingOps: any[] = [];
       ? (projectedTaxCents / (baselineSubtotalCents + receiptSubtotalCents)) * 100
       : 0;
 
-  const toCents = (val: string) => Math.round((Number.parseFloat(val || '0') || 0) * 100);
+  const toCents = (val: string, code = roomCurrency) => {
+    const factor = factorFor(code);
+    return Math.round((Number.parseFloat(val || '0') || 0) * factor);
+  };
   const preTaxSubtotal = (list: Item[]) => {
     if (!list?.length) return 0;
     const subtotal = list.reduce((sum, it) => {
@@ -1329,19 +1332,27 @@ const pendingOps: any[] = [];
     return Number.isFinite(subtotal) ? Math.max(0, Math.round(subtotal)) : 0;
   };
   $: preTaxSubtotalCents = preTaxSubtotal(items);
-  $: taxCentsPreview = toCents(
-    taxInput || (room?.tax_cents ? (room.tax_cents / 100).toFixed(2) : '0')
-  );
-  $: tipCentsPreview = toCents(
-    tipInput || (room?.tip_cents ? (room.tip_cents / 100).toFixed(2) : '0')
-  );
+  $: (() => {
+    const exp = exponentFor(roomCurrency);
+    const factor = factorFor(roomCurrency);
+    taxCentsPreview = toCents(
+      taxInput || (room?.tax_cents ? (room.tax_cents / factor).toFixed(exp) : '0'),
+      roomCurrency
+    );
+    tipCentsPreview = toCents(
+      tipInput || (room?.tip_cents ? (room.tip_cents / factor).toFixed(exp) : '0'),
+      roomCurrency
+    );
+  })();
   $: taxPercent = preTaxSubtotalCents > 0 ? (taxCentsPreview / preTaxSubtotalCents) * 100 : 0;
   $: tipPercent = preTaxSubtotalCents > 0 ? (tipCentsPreview / preTaxSubtotalCents) * 100 : 0;
 
   const setTipPercent = (pct: number) => {
     const base = preTaxSubtotalCents || 0;
     const tip = Math.round((base * pct) / 100);
-    tipInput = (tip / 100).toFixed(2);
+    const exp = exponentFor(roomCurrency);
+    const factor = factorFor(roomCurrency);
+    tipInput = (tip / factor).toFixed(exp);
     tipCentsPreview = tip;
     tipPercent = base > 0 ? (tip / base) * 100 : 0;
   };
@@ -2062,17 +2073,21 @@ const pendingOps: any[] = [];
       <div class="glass-card w-full rounded-t-3xl p-6 space-y-4 text-white">
         <h3 class="text-lg font-semibold">Tax / Tip</h3>
         <p class="text-xs text-surface-300">
-          Items subtotal: {preTaxSubtotalCents ? formatAmount(preTaxSubtotalCents) : '$0.00'}
+          Items subtotal: {formatAmount(preTaxSubtotalCents || 0, roomCurrency)}
         </p>
         <label class="block space-y-1">
-          <span class="text-sm text-surface-200">Tax ($)</span>
+          <span class="text-sm text-surface-200">
+            Tax ({symbolFor(roomCurrency) || roomCurrency})
+          </span>
           <input class="input w-full" bind:value={taxInput} inputmode="decimal" />
           <p class="text-xs text-surface-400">
             ≈ {(taxPercent || 0).toFixed(2)}% of items subtotal
           </p>
         </label>
         <label class="block space-y-1">
-          <span class="text-sm text-surface-200">Tip ($)</span>
+          <span class="text-sm text-surface-200">
+            Tip ({symbolFor(roomCurrency) || roomCurrency})
+          </span>
           <input class="input w-full" bind:value={tipInput} inputmode="decimal" />
           <p class="text-xs text-surface-400">
             ≈ {(tipPercent || 0).toFixed(2)}% of items subtotal
@@ -2094,8 +2109,9 @@ const pendingOps: any[] = [];
           <button
             class="btn btn-primary w-full"
             on:click={() => {
-              const tax = Math.round((Number.parseFloat(taxInput || '0') || 0) * 100);
-              const tip = Math.round((Number.parseFloat(tipInput || '0') || 0) * 100);
+              const factor = factorFor(roomCurrency);
+              const tax = Math.round((Number.parseFloat(taxInput || '0') || 0) * factor);
+              const tip = Math.round((Number.parseFloat(tipInput || '0') || 0) * factor);
               const payload = { tax_cents: tax, tip_cents: tip };
               sendOp({ kind: 'set_tax_tip', actor_id: identity.userId, payload });
               applyLocalOp({ kind: 'set_tax_tip', payload });
