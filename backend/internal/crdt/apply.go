@@ -46,7 +46,7 @@ func ApplyOp(doc *RoomDoc, op Op) {
 		op.Timestamp = time.Now().UnixMilli()
 	}
 
-	// ensure maps are initialized (old snapshots may omit them)
+	// Ensure maps are initialized (old snapshots may omit them).
 	if doc.Items == nil {
 		doc.Items = map[string]*Item{}
 	}
@@ -68,6 +68,7 @@ func ApplyOp(doc *RoomDoc, op Op) {
 		}
 		item := payload.Item
 		item.UpdatedAt = op.Timestamp
+		// Last-write-wins: drop stale updates if we already have a newer item.
 		if existing, ok := doc.Items[item.ID]; ok {
 			if existing.UpdatedAt > op.Timestamp {
 				return
@@ -97,6 +98,7 @@ func ApplyOp(doc *RoomDoc, op Op) {
 		}
 		participant := payload.Participant
 		participant.UpdatedAt = op.Timestamp
+		// Tombstone check blocks resurrection after a delete.
 		if doc.ParticipantTombstones[participant.ID] > op.Timestamp {
 			return
 		}
