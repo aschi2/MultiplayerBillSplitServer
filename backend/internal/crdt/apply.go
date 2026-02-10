@@ -34,6 +34,9 @@ type RoomPayload struct {
 	TargetCurrency string `json:"target_currency,omitempty"`
 }
 
+// ApplyOp is the single CRDT reducer. It is intentionally side-effect free:
+// given the current doc and one op, mutate the doc in-place to the new state.
+// Last-write-wins using UpdatedAt timestamps; tombstones prevent resurrecting deleted ids.
 func ApplyOp(doc *RoomDoc, op Op) {
 	if doc == nil {
 		return

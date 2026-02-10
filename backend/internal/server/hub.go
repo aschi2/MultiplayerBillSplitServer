@@ -59,6 +59,7 @@ func (h *Hub) loadDoc(ctx context.Context, roomID string) (*crdt.RoomDoc, int64)
 	}
 	if ops, err := h.store.LoadOps(ctx, roomID, seq); err == nil {
 		for _, op := range ops {
+			// Rehydrate doc by folding every op after the snapshot.
 			crdt.ApplyOp(room, op)
 			if op.Timestamp > room.UpdatedAt {
 				room.UpdatedAt = op.Timestamp
@@ -76,7 +77,7 @@ func (h *Hub) HandleWS(w http.ResponseWriter, r *http.Request, roomID string) {
 	if err != nil {
 		return
 	}
-	// keep-alive setup
+	// Keep-alive and idle timeout: any missed pong > wsPongWait will close the conn.
 	conn.SetReadDeadline(time.Now().Add(wsPongWait))
 	conn.SetPongHandler(func(string) error {
 		conn.SetReadDeadline(time.Now().Add(wsPongWait))
@@ -154,6 +155,7 @@ func (h *Hub) HandleWS(w http.ResponseWriter, r *http.Request, roomID string) {
 			appendMs := time.Since(appendStart).Milliseconds()
 
 			applyStart := time.Now()
+			// Apply to local copy so we can re-snapshot and broadcast the exact new state.
 			crdt.ApplyOp(doc, message.Op)
 			h.store.SaveSnapshot(ctx, roomID, doc, seq)
 			applyMs := time.Since(applyStart).Milliseconds()
@@ -255,6 +257,7 @@ func (h *Hub) reconcilePresence() {
 		if err != nil || room == nil {
 			continue
 		}
+		// Pull any ops after the snapshot so we update presence against the latest state.
 		if ops, err := h.store.LoadOps(ctx, roomID, seq); err == nil {
 			for _, op := range ops {
 				crdt.ApplyOp(room, op)
@@ -340,6 +343,7 @@ func (h *Hub) markParticipantAbsent(roomID, actorID string) {
 	if err != nil || room == nil {
 		return
 	}
+	// Rebuild current doc (snapshot + tail ops) before writing absence.
 	if ops, err := h.store.LoadOps(ctx, roomID, seq); err == nil {
 		for _, op := range ops {
 			crdt.ApplyOp(room, op)
