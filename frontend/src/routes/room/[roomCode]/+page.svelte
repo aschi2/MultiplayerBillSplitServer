@@ -4030,8 +4030,8 @@ $: if (!summaryData) {
     applyLocalOp({ kind: 'remove_participant', payload: { id } });
   };
 
-  const toggleFinished = (participantId: string) => {
-    const p = room?.participants?.[participantId];
+  const toggleMyFinished = () => {
+    const p = room?.participants?.[identity.userId];
     if (!p) return;
     const participant = {
       id: p.id,
@@ -4540,7 +4540,7 @@ $: if (!summaryData) {
     </div>
 
     <div class="glass-card room-sub-card ui-card-lift motion-rise motion-rise-delay-2 p-3">
-      <div class="flex gap-3 overflow-x-auto">
+      <div class="flex gap-3 overflow-x-auto py-1">
         {#if room}
           {#each participants as participant}
             <div class="relative w-14 shrink-0 text-center">
@@ -4559,15 +4559,6 @@ $: if (!summaryData) {
                 style={`background:${participant.present ? '#22c55e' : '#64748b'};`}
                 title={participant.present ? 'Present' : 'Not present'}
               ></span>
-              <label class="mt-1 flex items-center justify-center gap-1 cursor-pointer select-none" title="Mark as finished">
-                <input
-                  type="checkbox"
-                  class="h-3 w-3 rounded accent-green-500"
-                  checked={participant.finished ?? false}
-                  on:change={() => toggleFinished(participant.id)}
-                />
-                <span class="text-[9px] text-surface-300">Done</span>
-              </label>
               {#if !participant.present && !participantAssignments[participant.id]}
                 <button
                   class="action-btn action-btn-danger action-btn-compact mt-1 w-full"
@@ -4980,13 +4971,27 @@ $: if (!summaryData) {
   </main>
 
   <div class="sticky-toolbar toolbar-polish">
-    <div class="mx-auto grid w-full max-w-md grid-cols-2 gap-2">
-      <button class="btn btn-primary w-full" on:click={openNewItemModal}>Add Item</button>
-      <button class="btn btn-outline w-full" on:click={() => { syncTaxTipInputsFromRoom(); showTaxTipModal = true; }}>Tax/Tip</button>
-      <button class="btn btn-outline w-full" on:click={() => { syncBillAdjustmentInputsFromRoom(); showBillAdjustmentsModal = true; }}>
-        Adjustments
-      </button>
-      <button class="btn btn-outline w-full" on:click={async () => { await buildSummary(); showSummary = true; }}>Summary</button>
+    <div class="mx-auto w-full max-w-md space-y-2">
+      {#if room?.participants?.[identity.userId]}
+        <button
+          class="btn w-full {room.participants[identity.userId].finished ? 'border-green-400/40 bg-green-500/20 text-green-100' : 'border-red-400/40 bg-red-500/20 text-red-100'}"
+          on:click={toggleMyFinished}
+        >
+          {#if room.participants[identity.userId].finished}
+            ✓ I'm Done
+          {:else}
+            Mark as Done
+          {/if}
+        </button>
+      {/if}
+      <div class="grid grid-cols-2 gap-2">
+        <button class="btn btn-primary w-full" on:click={openNewItemModal}>Add Item</button>
+        <button class="btn btn-outline w-full" on:click={() => { syncTaxTipInputsFromRoom(); showTaxTipModal = true; }}>Tax/Tip</button>
+        <button class="btn btn-outline w-full" on:click={() => { syncBillAdjustmentInputsFromRoom(); showBillAdjustmentsModal = true; }}>
+          Adjustments
+        </button>
+        <button class="btn btn-outline w-full" on:click={async () => { await buildSummary(); showSummary = true; }}>Summary</button>
+      </div>
     </div>
   </div>
 
@@ -6503,15 +6508,6 @@ $: if (!summaryData) {
                 {/if}
               </div>
 
-              <label class="flex items-center gap-2 cursor-pointer select-none rounded-lg border border-surface-700/80 bg-surface-900/45 px-3 py-2">
-                <input
-                  type="checkbox"
-                  class="h-4 w-4 rounded accent-green-500"
-                  checked={room?.participants?.[person.id]?.finished ?? false}
-                  on:change={() => toggleFinished(person.id)}
-                />
-                <span class="text-sm text-surface-200">Finished</span>
-              </label>
             </div>
           {/each}
         </div>
