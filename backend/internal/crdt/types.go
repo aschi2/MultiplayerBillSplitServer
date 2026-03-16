@@ -12,6 +12,8 @@ type RoomDoc struct {
 	Participants          map[string]*Participant `json:"participants"`
 	TaxCents              int                     `json:"tax_cents"`
 	TipCents              int                     `json:"tip_cents"`
+	BillDiscountCents     int                     `json:"bill_discount_cents"`
+	BillChargesCents      int                     `json:"bill_charges_cents"`
 	Currency              string                  `json:"currency,omitempty"`
 	TargetCurrency        string                  `json:"target_currency,omitempty"`
 	Seq                   int64                   `json:"seq"`
@@ -29,6 +31,7 @@ type Item struct {
 	DiscountCents   int             `json:"discount_cents"`
 	DiscountPercent float64         `json:"discount_percent"`
 	Assigned        map[string]bool `json:"assigned"`
+	SortOrder       *int64          `json:"sort_order,omitempty"`
 	UpdatedAt       int64           `json:"updated_at"`
 	RawText         string          `json:"raw_text"`
 	Warnings        []string        `json:"warnings"`
@@ -36,12 +39,14 @@ type Item struct {
 }
 
 type Participant struct {
-	ID        string `json:"id"`
-	Name      string `json:"name"`
-	Initials  string `json:"initials"`
-	ColorSeed string `json:"color_seed"`
-	Present   bool   `json:"present"`
-	UpdatedAt int64  `json:"updated_at"`
+	ID            string `json:"id"`
+	Name          string `json:"name"`
+	Initials      string `json:"initials"`
+	ColorSeed     string `json:"color_seed"`
+	VenmoUsername string `json:"venmo_username,omitempty"`
+	Present       bool   `json:"present"`
+	Finished      bool   `json:"finished"`
+	UpdatedAt     int64  `json:"updated_at"`
 }
 
 type Op struct {

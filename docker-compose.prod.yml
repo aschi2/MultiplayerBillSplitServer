@@ -59,7 +59,7 @@ services:
       frontend:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "https://localhost/api/health"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:2019/config/"]
       interval: 10s
       timeout: 5s
       retries: 5

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"sort"
 	"sync"
 	"time"
 
@@ -69,7 +70,64 @@ func (h *Hub) loadDoc(ctx context.Context, roomID string) (*crdt.RoomDoc, int64)
 	if current, err := h.store.CurrentSeq(ctx, roomID); err == nil && current > seq {
 		seq = current
 	}
+	if ensureItemSortOrder(room) {
+		_ = h.store.SaveSnapshot(ctx, roomID, room, seq)
+	}
 	return room, seq
+}
+
+func ensureItemSortOrder(room *crdt.RoomDoc) bool {
+	if room == nil || len(room.Items) == 0 {
+		return false
+	}
+
+	type missingItem struct {
+		item *crdt.Item
+	}
+
+	maxOrder := int64(-1)
+	missing := make([]missingItem, 0)
+	for _, item := range room.Items {
+		if item == nil {
+			continue
+		}
+		if item.SortOrder != nil {
+			if *item.SortOrder > maxOrder {
+				maxOrder = *item.SortOrder
+			}
+			continue
+		}
+		missing = append(missing, missingItem{item: item})
+	}
+	if len(missing) == 0 {
+		return false
+	}
+
+	sort.SliceStable(missing, func(i, j int) bool {
+		left := missing[i].item
+		right := missing[j].item
+		if left.UpdatedAt != right.UpdatedAt {
+			return left.UpdatedAt < right.UpdatedAt
+		}
+		return left.ID < right.ID
+	})
+
+	if maxOrder < 0 {
+		maxOrder = 0
+		for idx, entry := range missing {
+			value := int64((idx + 1) * 1000)
+			entry.item.SortOrder = &value
+		}
+		return true
+	}
+
+	changed := false
+	for idx, entry := range missing {
+		value := maxOrder + int64((idx+1)*1000)
+		entry.item.SortOrder = &value
+		changed = true
+	}
+	return changed
 }
 
 func (h *Hub) HandleWS(w http.ResponseWriter, r *http.Request, roomID string) {

@@ -1,0 +1,62 @@
+- generic [ref=e2]:
+  - generic [ref=e54]:
+    - banner [ref=e55]:
+      - generic [ref=e56]:
+        - button "Landing" [ref=e57] [cursor=pointer]:
+          - img [ref=e58]
+          - generic [ref=e60]: Landing
+        - generic [ref=e61]:
+          - paragraph [ref=e62]: Restaurant
+          - heading "Manage Attach Inline" [level=1] [ref=e63]
+          - generic [ref=e64]:
+            - 'button "Bill Code: NJHKSF" [ref=e65] [cursor=pointer]'
+            - button "Expand QR code" [ref=e66] [cursor=pointer]:
+              - img "Join QR code" [ref=e67]
+        - generic [ref=e68]:
+          - img "Inline Verify" [ref=e69]:
+            - img [ref=e70]:
+              - generic [ref=e72]: IV
+          - generic [ref=e73]:
+            - paragraph [ref=e74]: You
+            - paragraph [ref=e75]: Inline Verify
+            - button "Edit Profile" [ref=e76] [cursor=pointer]
+        - generic [ref=e77]:
+          - button "Rename Bill" [ref=e78] [cursor=pointer]
+          - button "Add Person" [ref=e79] [cursor=pointer]
+      - generic [ref=e80]:
+        - generic [ref=e81]: Bill currency
+        - combobox [ref=e82]:
+          - option "🇺🇸 USD $" [selected]
+          - option "🇪🇺 EUR €"
+          - option "🇬🇧 GBP £"
+          - option "🇯🇵 JPY ¥"
+          - option "🇨🇦 CAD $"
+          - option "🇦🇺 AUD $"
+          - option "🇨🇭 CHF Fr"
+          - option "🇨🇳 CNY ¥"
+          - option "🇰🇷 KRW ₩"
+          - option "🇲🇽 MXN $"
+          - option "🇸🇬 SGD $"
+          - option "🇭🇰 HKD $"
+          - option "🇮🇳 INR ₹"
+          - option "🇸🇪 SEK kr"
+          - option "🇳🇴 NOK kr"
+      - generic [ref=e85]:
+        - img "Inline Verify" [ref=e87]:
+          - img [ref=e88]:
+            - generic [ref=e90]: IV
+        - generic "Present" [ref=e91]
+    - main [ref=e92]:
+      - generic [ref=e94]:
+        - heading "Items" [level=2] [ref=e95]
+        - generic [ref=e96]:
+          - button "Bulk" [ref=e97] [cursor=pointer]
+          - button "Upload receipt" [ref=e98] [cursor=pointer]:
+            - img [ref=e99]
+            - generic [ref=e103]: Upload receipt
+    - generic [ref=e105]:
+      - button "Add Item" [ref=e106] [cursor=pointer]
+      - button "Tax/Tip" [ref=e107] [cursor=pointer]
+      - button "Adjustments" [ref=e108] [cursor=pointer]
+      - button "Summary" [ref=e109] [cursor=pointer]
+  - generic [ref=e40]: untitled page

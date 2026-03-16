@@ -1,0 +1,39 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - banner [ref=e5]:
+      - img "Divvi" [ref=e7]
+      - paragraph [ref=e8]: Split receipts in real time with your group. Built for mobile, fast to use at the table.
+    - main [ref=e9]:
+      - button "Create new bill Start a room and share the code with friends. Create Bill" [active] [ref=e10] [cursor=pointer]:
+        - generic [ref=e12]:
+          - paragraph [ref=e13]: Create new bill
+          - paragraph [ref=e14]: Start a room and share the code with friends.
+        - generic [ref=e16]: Create Bill
+      - button "Join existing bill Enter a code and start assigning items. Join Bill" [ref=e17] [cursor=pointer]:
+        - generic [ref=e19]:
+          - paragraph [ref=e20]: Join existing bill
+          - paragraph [ref=e21]: Enter a code and start assigning items.
+        - generic [ref=e23]: Join Bill
+    - generic [ref=e24]:
+      - generic [ref=e25]:
+        - paragraph [ref=e28]: Your bills
+        - generic "0 saved bills" [ref=e29]: "0"
+      - paragraph [ref=e31]: No recent bills yet on this device.
+  - generic [ref=e34]:
+    - heading "Create bill" [level=2] [ref=e35]
+    - paragraph [ref=e36]: Your name and bill name are shown to everyone in the room.
+    - generic [ref=e37]:
+      - text: Your name
+      - textbox "Your name" [ref=e38]:
+        - /placeholder: ""
+    - generic [ref=e39]:
+      - text: Bill name
+      - textbox "Bill name" [ref=e40]:
+        - /placeholder: ""
+    - generic [ref=e41]:
+      - text: Venmo username (optional)
+      - textbox "Venmo username (optional)" [ref=e42]:
+        - /placeholder: ""
+    - generic [ref=e43]:
+      - button "Cancel" [ref=e44] [cursor=pointer]
+      - button "Start" [disabled] [ref=e45]

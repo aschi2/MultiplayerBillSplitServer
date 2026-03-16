@@ -126,3 +126,13 @@ func (s *Store) TouchRoom(ctx context.Context, roomID string) {
 	pipe.Expire(ctx, s.opsKey(roomID), s.TTL)
 	pipe.Exec(ctx)
 }
+
+// SnapshotTTL returns remaining TTL for a room snapshot key.
+// A return value <= 0 means missing or already expired.
+func (s *Store) SnapshotTTL(ctx context.Context, roomID string) (time.Duration, error) {
+	ttl, err := s.Client.TTL(ctx, s.snapshotKey(roomID)).Result()
+	if err != nil {
+		return 0, err
+	}
+	return ttl, nil
+}

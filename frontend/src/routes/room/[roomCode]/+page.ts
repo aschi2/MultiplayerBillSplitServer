@@ -1,3 +1,3 @@
 export const load = ({ params }) => {
-  return { roomCode: params.roomCode };
+  return { roomCode: (params.roomCode || '').toUpperCase() };
 };

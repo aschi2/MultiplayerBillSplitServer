@@ -1,0 +1,477 @@
+- generic [ref=e2]:
+  - generic [ref=e67]:
+    - banner [ref=e68]:
+      - generic [ref=e69]:
+        - button "Landing" [ref=e70] [cursor=pointer]:
+          - img [ref=e71]
+          - generic [ref=e73]: Landing
+        - generic [ref=e74]:
+          - paragraph [ref=e75]: Restaurant
+          - heading "Prod Receipt Fixes" [level=1] [ref=e76]
+          - generic [ref=e77]:
+            - 'button "Bill Code: A4R993" [ref=e78] [cursor=pointer]'
+            - button "Expand QR code" [ref=e79] [cursor=pointer]:
+              - img "Join QR code" [ref=e80]
+        - generic [ref=e81]:
+          - img "Prod Verify" [ref=e82]:
+            - img [ref=e83]:
+              - generic [ref=e85]: PV
+          - generic [ref=e86]:
+            - paragraph [ref=e87]: You
+            - paragraph [ref=e88]: Prod Verify
+            - button "Edit Profile" [ref=e89] [cursor=pointer]
+        - generic [ref=e90]:
+          - button "Rename Bill" [ref=e91] [cursor=pointer]
+          - button "Add Person" [ref=e92] [cursor=pointer]
+      - generic [ref=e93]:
+        - generic [ref=e94]: Bill currency
+        - combobox [ref=e95]:
+          - option "🇺🇸 USD $" [selected]
+          - option "🇪🇺 EUR €"
+          - option "🇬🇧 GBP £"
+          - option "🇯🇵 JPY ¥"
+          - option "🇨🇦 CAD $"
+          - option "🇦🇺 AUD $"
+          - option "🇨🇭 CHF Fr"
+          - option "🇨🇳 CNY ¥"
+          - option "🇰🇷 KRW ₩"
+          - option "🇲🇽 MXN $"
+          - option "🇸🇬 SGD $"
+          - option "🇭🇰 HKD $"
+          - option "🇮🇳 INR ₹"
+          - option "🇸🇪 SEK kr"
+          - option "🇳🇴 NOK kr"
+      - generic [ref=e98]:
+        - img "Prod Verify" [ref=e100]:
+          - img [ref=e101]:
+            - generic [ref=e103]: PV
+        - generic "Present" [ref=e104]
+    - main [ref=e105]:
+      - generic [ref=e106]:
+        - generic [ref=e107]:
+          - heading "Items" [level=2] [ref=e108]
+          - generic [ref=e109]:
+            - button "Bulk" [ref=e110] [cursor=pointer]
+            - button "Add receipt" [ref=e964] [cursor=pointer]:
+              - img [ref=e112]
+              - generic [ref=e116]: Add receipt
+        - 'button "Fried Green Tomatoes $8.00 Assigned: Assign Me Edit Copy Delete" [ref=e965] [cursor=pointer]':
+          - generic [ref=e966]:
+            - paragraph [ref=e967]: Fried Green Tomatoes
+            - paragraph [ref=e968]: $8.00
+            - generic [ref=e970]: "Assigned:"
+          - generic [ref=e971]:
+            - generic [ref=e972]:
+              - button "Assign" [ref=e973]:
+                - img [ref=e974]
+                - generic [ref=e980]: Assign
+              - button "Me" [ref=e981]:
+                - img [ref=e982]
+                - generic [ref=e983]: Me
+            - generic [ref=e984]:
+              - button "Edit" [ref=e985]:
+                - img [ref=e986]
+                - generic [ref=e988]: Edit
+              - button "Copy" [ref=e989]:
+                - img [ref=e990]
+                - generic [ref=e993]: Copy
+              - button "Delete" [ref=e994]:
+                - img [ref=e995]
+                - generic [ref=e998]: Delete
+        - 'button "**AS App** $3.00 Assigned: Assign Me Edit Copy Delete" [ref=e999] [cursor=pointer]':
+          - generic [ref=e1000]:
+            - paragraph [ref=e1001]: "**AS App**"
+            - paragraph [ref=e1002]: $3.00
+            - generic [ref=e1004]: "Assigned:"
+          - generic [ref=e1005]:
+            - generic [ref=e1006]:
+              - button "Assign" [ref=e1007]:
+                - img [ref=e1008]
+                - generic [ref=e1014]: Assign
+              - button "Me" [ref=e1015]:
+                - img [ref=e1016]
+                - generic [ref=e1017]: Me
+            - generic [ref=e1018]:
+              - button "Edit" [ref=e1019]:
+                - img [ref=e1020]
+                - generic [ref=e1022]: Edit
+              - button "Copy" [ref=e1023]:
+                - img [ref=e1024]
+                - generic [ref=e1027]: Copy
+              - button "Delete" [ref=e1028]:
+                - img [ref=e1029]
+                - generic [ref=e1032]: Delete
+        - 'button "Ranch (APP Only) $3.00 Assigned: Assign Me Edit Copy Delete" [ref=e1033] [cursor=pointer]':
+          - generic [ref=e1034]:
+            - paragraph [ref=e1035]: Ranch (APP Only)
+            - paragraph [ref=e1036]: $3.00
+            - generic [ref=e1038]: "Assigned:"
+          - generic [ref=e1039]:
+            - generic [ref=e1040]:
+              - button "Assign" [ref=e1041]:
+                - img [ref=e1042]
+                - generic [ref=e1048]: Assign
+              - button "Me" [ref=e1049]:
+                - img [ref=e1050]
+                - generic [ref=e1051]: Me
+            - generic [ref=e1052]:
+              - button "Edit" [ref=e1053]:
+                - img [ref=e1054]
+                - generic [ref=e1056]: Edit
+              - button "Copy" [ref=e1057]:
+                - img [ref=e1058]
+                - generic [ref=e1061]: Copy
+              - button "Delete" [ref=e1062]:
+                - img [ref=e1063]
+                - generic [ref=e1066]: Delete
+        - 'button "(12oz) Sapporo $6.00 Assigned: Assign Me Edit Copy Delete" [ref=e1067] [cursor=pointer]':
+          - generic [ref=e1068]:
+            - paragraph [ref=e1069]: (12oz) Sapporo
+            - paragraph [ref=e1070]: $6.00
+            - generic [ref=e1072]: "Assigned:"
+          - generic [ref=e1073]:
+            - generic [ref=e1074]:
+              - button "Assign" [ref=e1075]:
+                - img [ref=e1076]
+                - generic [ref=e1082]: Assign
+              - button "Me" [ref=e1083]:
+                - img [ref=e1084]
+                - generic [ref=e1085]: Me
+            - generic [ref=e1086]:
+              - button "Edit" [ref=e1087]:
+                - img [ref=e1088]
+                - generic [ref=e1090]: Edit
+              - button "Copy" [ref=e1091]:
+                - img [ref=e1092]
+                - generic [ref=e1095]: Copy
+              - button "Delete" [ref=e1096]:
+                - img [ref=e1097]
+                - generic [ref=e1100]: Delete
+        - 'button "1/2 Chicken Plate $18.00 Assigned: Assign Me Edit Copy Delete" [ref=e1101] [cursor=pointer]':
+          - generic [ref=e1102]:
+            - paragraph [ref=e1103]: 1/2 Chicken Plate
+            - paragraph [ref=e1104]: $18.00
+            - generic [ref=e1106]: "Assigned:"
+          - generic [ref=e1107]:
+            - generic [ref=e1108]:
+              - button "Assign" [ref=e1109]:
+                - img [ref=e1110]
+                - generic [ref=e1116]: Assign
+              - button "Me" [ref=e1117]:
+                - img [ref=e1118]
+                - generic [ref=e1119]: Me
+            - generic [ref=e1120]:
+              - button "Edit" [ref=e1121]:
+                - img [ref=e1122]
+                - generic [ref=e1124]: Edit
+              - button "Copy" [ref=e1125]:
+                - img [ref=e1126]
+                - generic [ref=e1129]: Copy
+              - button "Delete" [ref=e1130]:
+                - img [ref=e1131]
+                - generic [ref=e1134]: Delete
+        - 'button "Thigh $3.00 Assigned: Assign Me Edit Copy Delete" [ref=e1135] [cursor=pointer]':
+          - generic [ref=e1136]:
+            - paragraph [ref=e1137]: Thigh
+            - paragraph [ref=e1138]: $3.00
+            - generic [ref=e1140]: "Assigned:"
+          - generic [ref=e1141]:
+            - generic [ref=e1142]:
+              - button "Assign" [ref=e1143]:
+                - img [ref=e1144]
+                - generic [ref=e1150]: Assign
+              - button "Me" [ref=e1151]:
+                - img [ref=e1152]
+                - generic [ref=e1153]: Me
+            - generic [ref=e1154]:
+              - button "Edit" [ref=e1155]:
+                - img [ref=e1156]
+                - generic [ref=e1158]: Edit
+              - button "Copy" [ref=e1159]:
+                - img [ref=e1160]
+                - generic [ref=e1163]: Copy
+              - button "Delete" [ref=e1164]:
+                - img [ref=e1165]
+                - generic [ref=e1168]: Delete
+        - 'button "Side Slaw $0.50 Assigned: Assign Me Edit Copy Delete" [ref=e1169] [cursor=pointer]':
+          - generic [ref=e1170]:
+            - paragraph [ref=e1171]: Side Slaw
+            - paragraph [ref=e1172]: $0.50
+            - generic [ref=e1174]: "Assigned:"
+          - generic [ref=e1175]:
+            - generic [ref=e1176]:
+              - button "Assign" [ref=e1177]:
+                - img [ref=e1178]
+                - generic [ref=e1184]: Assign
+              - button "Me" [ref=e1185]:
+                - img [ref=e1186]
+                - generic [ref=e1187]: Me
+            - generic [ref=e1188]:
+              - button "Edit" [ref=e1189]:
+                - img [ref=e1190]
+                - generic [ref=e1192]: Edit
+              - button "Copy" [ref=e1193]:
+                - img [ref=e1194]
+                - generic [ref=e1197]: Copy
+              - button "Delete" [ref=e1198]:
+                - img [ref=e1199]
+                - generic [ref=e1202]: Delete
+        - 'button "Breast $3.00 Assigned: Assign Me Edit Copy Delete" [ref=e1203] [cursor=pointer]':
+          - generic [ref=e1204]:
+            - paragraph [ref=e1205]: Breast
+            - paragraph [ref=e1206]: $3.00
+            - generic [ref=e1208]: "Assigned:"
+          - generic [ref=e1209]:
+            - generic [ref=e1210]:
+              - button "Assign" [ref=e1211]:
+                - img [ref=e1212]
+                - generic [ref=e1218]: Assign
+              - button "Me" [ref=e1219]:
+                - img [ref=e1220]
+                - generic [ref=e1221]: Me
+            - generic [ref=e1222]:
+              - button "Edit" [ref=e1223]:
+                - img [ref=e1224]
+                - generic [ref=e1226]: Edit
+              - button "Copy" [ref=e1227]:
+                - img [ref=e1228]
+                - generic [ref=e1231]: Copy
+              - button "Delete" [ref=e1232]:
+                - img [ref=e1233]
+                - generic [ref=e1236]: Delete
+        - 'button "Wing $2.00 Assigned: Assign Me Edit Copy Delete" [ref=e1237] [cursor=pointer]':
+          - generic [ref=e1238]:
+            - paragraph [ref=e1239]: Wing
+            - paragraph [ref=e1240]: $2.00
+            - generic [ref=e1242]: "Assigned:"
+          - generic [ref=e1243]:
+            - generic [ref=e1244]:
+              - button "Assign" [ref=e1245]:
+                - img [ref=e1246]
+                - generic [ref=e1252]: Assign
+              - button "Me" [ref=e1253]:
+                - img [ref=e1254]
+                - generic [ref=e1255]: Me
+            - generic [ref=e1256]:
+              - button "Edit" [ref=e1257]:
+                - img [ref=e1258]
+                - generic [ref=e1260]: Edit
+              - button "Copy" [ref=e1261]:
+                - img [ref=e1262]
+                - generic [ref=e1265]: Copy
+              - button "Delete" [ref=e1266]:
+                - img [ref=e1267]
+                - generic [ref=e1270]: Delete
+        - 'button "Leg $2.00 Assigned: Assign Me Edit Copy Delete" [ref=e1271] [cursor=pointer]':
+          - generic [ref=e1272]:
+            - paragraph [ref=e1273]: Leg
+            - paragraph [ref=e1274]: $2.00
+            - generic [ref=e1276]: "Assigned:"
+          - generic [ref=e1277]:
+            - generic [ref=e1278]:
+              - button "Assign" [ref=e1279]:
+                - img [ref=e1280]
+                - generic [ref=e1286]: Assign
+              - button "Me" [ref=e1287]:
+                - img [ref=e1288]
+                - generic [ref=e1289]: Me
+            - generic [ref=e1290]:
+              - button "Edit" [ref=e1291]:
+                - img [ref=e1292]
+                - generic [ref=e1294]: Edit
+              - button "Copy" [ref=e1295]:
+                - img [ref=e1296]
+                - generic [ref=e1299]: Copy
+              - button "Delete" [ref=e1300]:
+                - img [ref=e1301]
+                - generic [ref=e1304]: Delete
+        - 'button "Side Mac & Cheese $0.50 Assigned: Assign Me Edit Copy Delete" [ref=e1305] [cursor=pointer]':
+          - generic [ref=e1306]:
+            - paragraph [ref=e1307]: Side Mac & Cheese
+            - paragraph [ref=e1308]: $0.50
+            - generic [ref=e1310]: "Assigned:"
+          - generic [ref=e1311]:
+            - generic [ref=e1312]:
+              - button "Assign" [ref=e1313]:
+                - img [ref=e1314]
+                - generic [ref=e1320]: Assign
+              - button "Me" [ref=e1321]:
+                - img [ref=e1322]
+                - generic [ref=e1323]: Me
+            - generic [ref=e1324]:
+              - button "Edit" [ref=e1325]:
+                - img [ref=e1326]
+                - generic [ref=e1328]: Edit
+              - button "Copy" [ref=e1329]:
+                - img [ref=e1330]
+                - generic [ref=e1333]: Copy
+              - button "Delete" [ref=e1334]:
+                - img [ref=e1335]
+                - generic [ref=e1338]: Delete
+        - 'button "Piece Dark Plate $5.67 Assigned: Assign Me Edit Copy Delete" [ref=e1339] [cursor=pointer]':
+          - generic [ref=e1340]:
+            - paragraph [ref=e1341]: Piece Dark Plate
+            - paragraph [ref=e1342]: $5.67
+            - generic [ref=e1344]: "Assigned:"
+          - generic [ref=e1345]:
+            - generic [ref=e1346]:
+              - button "Assign" [ref=e1347]:
+                - img [ref=e1348]
+                - generic [ref=e1354]: Assign
+              - button "Me" [ref=e1355]:
+                - img [ref=e1356]
+                - generic [ref=e1357]: Me
+            - generic [ref=e1358]:
+              - button "Edit" [ref=e1359]:
+                - img [ref=e1360]
+                - generic [ref=e1362]: Edit
+              - button "Copy" [ref=e1363]:
+                - img [ref=e1364]
+                - generic [ref=e1367]: Copy
+              - button "Delete" [ref=e1368]:
+                - img [ref=e1369]
+                - generic [ref=e1372]: Delete
+        - 'button "Piece Dark Plate $5.67 Assigned: Assign Me Edit Copy Delete" [ref=e1373] [cursor=pointer]':
+          - generic [ref=e1374]:
+            - paragraph [ref=e1375]: Piece Dark Plate
+            - paragraph [ref=e1376]: $5.67
+            - generic [ref=e1378]: "Assigned:"
+          - generic [ref=e1379]:
+            - generic [ref=e1380]:
+              - button "Assign" [ref=e1381]:
+                - img [ref=e1382]
+                - generic [ref=e1388]: Assign
+              - button "Me" [ref=e1389]:
+                - img [ref=e1390]
+                - generic [ref=e1391]: Me
+            - generic [ref=e1392]:
+              - button "Edit" [ref=e1393]:
+                - img [ref=e1394]
+                - generic [ref=e1396]: Edit
+              - button "Copy" [ref=e1397]:
+                - img [ref=e1398]
+                - generic [ref=e1401]: Copy
+              - button "Delete" [ref=e1402]:
+                - img [ref=e1403]
+                - generic [ref=e1406]: Delete
+        - 'button "Piece Dark Plate $5.67 Assigned: Assign Me Edit Copy Delete" [ref=e1407] [cursor=pointer]':
+          - generic [ref=e1408]:
+            - paragraph [ref=e1409]: Piece Dark Plate
+            - paragraph [ref=e1410]: $5.67
+            - generic [ref=e1412]: "Assigned:"
+          - generic [ref=e1413]:
+            - generic [ref=e1414]:
+              - button "Assign" [ref=e1415]:
+                - img [ref=e1416]
+                - generic [ref=e1422]: Assign
+              - button "Me" [ref=e1423]:
+                - img [ref=e1424]
+                - generic [ref=e1425]: Me
+            - generic [ref=e1426]:
+              - button "Edit" [ref=e1427]:
+                - img [ref=e1428]
+                - generic [ref=e1430]: Edit
+              - button "Copy" [ref=e1431]:
+                - img [ref=e1432]
+                - generic [ref=e1435]: Copy
+              - button "Delete" [ref=e1436]:
+                - img [ref=e1437]
+                - generic [ref=e1440]: Delete
+        - 'button "Side Fries $0.50 Assigned: Assign Me Edit Copy Delete" [ref=e1441] [cursor=pointer]':
+          - generic [ref=e1442]:
+            - paragraph [ref=e1443]: Side Fries
+            - paragraph [ref=e1444]: $0.50
+            - generic [ref=e1446]: "Assigned:"
+          - generic [ref=e1447]:
+            - generic [ref=e1448]:
+              - button "Assign" [ref=e1449]:
+                - img [ref=e1450]
+                - generic [ref=e1456]: Assign
+              - button "Me" [ref=e1457]:
+                - img [ref=e1458]
+                - generic [ref=e1459]: Me
+            - generic [ref=e1460]:
+              - button "Edit" [ref=e1461]:
+                - img [ref=e1462]
+                - generic [ref=e1464]: Edit
+              - button "Copy" [ref=e1465]:
+                - img [ref=e1466]
+                - generic [ref=e1469]: Copy
+              - button "Delete" [ref=e1470]:
+                - img [ref=e1471]
+                - generic [ref=e1474]: Delete
+        - 'button "2x Thigh $4.00 Assigned: Assign Me Edit Copy Delete" [ref=e1475] [cursor=pointer]':
+          - generic [ref=e1476]:
+            - paragraph [ref=e1477]: 2x Thigh
+            - paragraph [ref=e1478]: $4.00
+            - generic [ref=e1480]: "Assigned:"
+          - generic [ref=e1481]:
+            - generic [ref=e1482]:
+              - button "Assign" [ref=e1483]:
+                - img [ref=e1484]
+                - generic [ref=e1490]: Assign
+              - button "Me" [ref=e1491]:
+                - img [ref=e1492]
+                - generic [ref=e1493]: Me
+            - generic [ref=e1494]:
+              - button "Edit" [ref=e1495]:
+                - img [ref=e1496]
+                - generic [ref=e1498]: Edit
+              - button "Copy" [ref=e1499]:
+                - img [ref=e1500]
+                - generic [ref=e1503]: Copy
+              - button "Delete" [ref=e1504]:
+                - img [ref=e1505]
+                - generic [ref=e1508]: Delete
+        - 'button "Pecan Pie (Slice) $7.00 Assigned: Assign Me Edit Copy Delete" [ref=e1509] [cursor=pointer]':
+          - generic [ref=e1510]:
+            - paragraph [ref=e1511]: Pecan Pie (Slice)
+            - paragraph [ref=e1512]: $7.00
+            - generic [ref=e1514]: "Assigned:"
+          - generic [ref=e1515]:
+            - generic [ref=e1516]:
+              - button "Assign" [ref=e1517]:
+                - img [ref=e1518]
+                - generic [ref=e1524]: Assign
+              - button "Me" [ref=e1525]:
+                - img [ref=e1526]
+                - generic [ref=e1527]: Me
+            - generic [ref=e1528]:
+              - button "Edit" [ref=e1529]:
+                - img [ref=e1530]
+                - generic [ref=e1532]: Edit
+              - button "Copy" [ref=e1533]:
+                - img [ref=e1534]
+                - generic [ref=e1537]: Copy
+              - button "Delete" [ref=e1538]:
+                - img [ref=e1539]
+                - generic [ref=e1542]: Delete
+        - 'button "Coconut Pie (Slice) $7.00 Assigned: Assign Me Edit Copy Delete" [ref=e1543] [cursor=pointer]':
+          - generic [ref=e1544]:
+            - paragraph [ref=e1545]: Coconut Pie (Slice)
+            - paragraph [ref=e1546]: $7.00
+            - generic [ref=e1548]: "Assigned:"
+          - generic [ref=e1549]:
+            - generic [ref=e1550]:
+              - button "Assign" [ref=e1551]:
+                - img [ref=e1552]
+                - generic [ref=e1558]: Assign
+              - button "Me" [ref=e1559]:
+                - img [ref=e1560]
+                - generic [ref=e1561]: Me
+            - generic [ref=e1562]:
+              - button "Edit" [ref=e1563]:
+                - img [ref=e1564]
+                - generic [ref=e1566]: Edit
+              - button "Copy" [ref=e1567]:
+                - img [ref=e1568]
+                - generic [ref=e1571]: Copy
+              - button "Delete" [ref=e1572]:
+                - img [ref=e1573]
+                - generic [ref=e1576]: Delete
+    - generic [ref=e118]:
+      - button "Add Item" [ref=e119] [cursor=pointer]
+      - button "Tax/Tip" [ref=e120] [cursor=pointer]
+      - button "Adjustments" [ref=e121] [cursor=pointer]
+      - button "Summary" [ref=e122] [cursor=pointer]
+  - generic [ref=e40]: untitled page

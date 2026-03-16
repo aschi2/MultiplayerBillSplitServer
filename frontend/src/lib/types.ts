@@ -3,7 +3,21 @@ export type Participant = {
   name: string;
   initials: string;
   colorSeed: string;
+  venmoUsername?: string;
   present: boolean;
+  finished?: boolean;
+};
+
+export type ItemAddonMeta = {
+  name: string;
+  price_cents: number;
+  raw_text?: string | null;
+};
+
+export type ItemMeta = {
+  addons?: ItemAddonMeta[];
+  repeated_group_excluded?: boolean;
+  [key: string]: any;
 };
 
 export type Item = {
@@ -15,7 +29,9 @@ export type Item = {
   discount_cents: number;
   discount_percent: number;
   assigned: Record<string, boolean>;
+  sort_order?: number | null;
   raw_text?: string;
+  meta?: ItemMeta;
 };
 
 export type RoomDoc = {
@@ -25,6 +41,8 @@ export type RoomDoc = {
   participants: Record<string, Participant>;
   tax_cents: number;
   tip_cents: number;
+  bill_discount_cents?: number;
+  bill_charges_cents?: number;
   currency?: string;
   target_currency?: string;
   seq: number;
@@ -37,6 +55,13 @@ export type ReceiptItem = {
   line_price_cents: number | null;
   discount_cents: number | null;
   discount_percent: number | null;
+  addons?: ReceiptAddon[] | null;
+  raw_text: string | null;
+};
+
+export type ReceiptAddon = {
+  name: string;
+  price_cents: number | null;
   raw_text: string | null;
 };
 
@@ -44,7 +69,10 @@ export type ReceiptParseResult = {
   merchant?: string | null;
   items: ReceiptItem[];
   subtotal_cents: number | null;
+  bill_discount_cents?: number | null;
+  bill_charges_cents?: number | null;
   tax_cents: number | null;
+  tip_cents?: number | null;
   total_cents: number | null;
   currency?: string | null;
   fees?: string[];

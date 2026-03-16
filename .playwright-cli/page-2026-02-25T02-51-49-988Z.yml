@@ -1,0 +1,103 @@
+- generic [ref=e2]:
+  - generic [ref=e46]:
+    - banner [ref=e47]:
+      - generic [ref=e48]:
+        - button "Landing" [ref=e49] [cursor=pointer]:
+          - img [ref=e50]
+          - generic [ref=e52]: Landing
+        - generic [ref=e53]:
+          - paragraph [ref=e54]: Restaurant
+          - heading "PW QA Bill" [level=1] [ref=e55]
+          - generic [ref=e56]:
+            - generic [ref=e57]: "Bill: 8JYSB3"
+            - button "Expand QR code" [ref=e58] [cursor=pointer]:
+              - img "Join QR code" [ref=e59]
+        - generic [ref=e60]:
+          - img "QA Host" [ref=e61]:
+            - img [ref=e62]:
+              - generic [ref=e64]: QH
+          - generic [ref=e65]:
+            - paragraph [ref=e66]: You
+            - paragraph [ref=e67]: QA Host
+            - button "Edit Profile" [ref=e68] [cursor=pointer]
+        - generic [ref=e69]:
+          - button "Rename Bill" [ref=e70] [cursor=pointer]
+          - button "Add Person" [ref=e71] [cursor=pointer]
+      - generic [ref=e72]:
+        - generic [ref=e73]: Bill currency
+        - combobox [ref=e74]:
+          - option "🇺🇸 USD $" [selected]
+          - option "🇪🇺 EUR €"
+          - option "🇬🇧 GBP £"
+          - option "🇯🇵 JPY ¥"
+          - option "🇨🇦 CAD $"
+          - option "🇦🇺 AUD $"
+          - option "🇨🇭 CHF Fr"
+          - option "🇨🇳 CNY ¥"
+          - option "🇰🇷 KRW ₩"
+          - option "🇲🇽 MXN $"
+          - option "🇸🇬 SGD $"
+          - option "🇭🇰 HKD $"
+          - option "🇮🇳 INR ₹"
+          - option "🇸🇪 SEK kr"
+          - option "🇳🇴 NOK kr"
+      - generic [ref=e77]:
+        - img "QA Host" [ref=e79]:
+          - img [ref=e80]:
+            - generic [ref=e82]: QH
+        - generic "Present" [ref=e83]
+    - main [ref=e84]:
+      - generic [ref=e86]:
+        - heading "Items" [level=2] [ref=e87]
+        - generic [ref=e88]:
+          - button "Bulk" [ref=e89] [cursor=pointer]
+          - button "Upload receipt" [ref=e90] [cursor=pointer]:
+            - img [ref=e91]
+            - generic [ref=e95]: Upload receipt
+    - generic [ref=e97]:
+      - button "Add Item" [ref=e98] [cursor=pointer]
+      - button "Tax/Tip" [ref=e99] [cursor=pointer]
+      - button "Adjustments" [ref=e100] [cursor=pointer]
+      - button "Summary" [ref=e101] [cursor=pointer]
+    - generic [ref=e103]:
+      - heading "Add person" [level=3] [ref=e104]
+      - paragraph [ref=e105]: Add someone before they join so items can be assigned immediately.
+      - generic [ref=e106]:
+        - generic [ref=e107]:
+          - paragraph [ref=e108]: Friend groups
+          - button "Manage groups" [active] [ref=e109] [cursor=pointer]
+        - paragraph [ref=e110]: No saved groups yet. Use “Manage groups” to create one.
+      - generic [ref=e111]:
+        - text: Name
+        - textbox "Name" [ref=e112]
+      - generic [ref=e113]:
+        - text: Venmo username (optional)
+        - textbox "Venmo username (optional)" [ref=e114]
+      - generic [ref=e115]:
+        - button "Cancel" [ref=e116] [cursor=pointer]
+        - button "Add" [ref=e117] [cursor=pointer]
+    - generic [ref=e119]:
+      - heading "Friend groups" [level=3] [ref=e120]
+      - paragraph [ref=e121]: Create, edit, update, or delete reusable groups of people.
+      - generic [ref=e122]:
+        - generic [ref=e123]:
+          - paragraph [ref=e124]: Saved groups
+          - button "New draft" [ref=e125] [cursor=pointer]
+        - paragraph [ref=e126]: No groups saved yet.
+      - generic [ref=e127]:
+        - text: Group name
+        - textbox "Group name" [ref=e128]
+      - generic [ref=e129]:
+        - generic [ref=e130]:
+          - paragraph [ref=e131]: Members
+          - button "Add member" [ref=e132] [cursor=pointer]
+        - generic [ref=e133]:
+          - textbox "Name" [ref=e134]
+          - textbox "Venmo (optional)" [ref=e135]
+          - button "Remove" [ref=e136] [cursor=pointer]
+      - generic [ref=e137]:
+        - button "Save as new" [ref=e138] [cursor=pointer]
+        - button "Update group" [disabled] [ref=e139]
+        - button "Delete group" [disabled] [ref=e140]
+      - button "Done" [ref=e141] [cursor=pointer]
+  - generic [ref=e32]: untitled page

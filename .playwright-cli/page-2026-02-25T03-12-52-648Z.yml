@@ -1,0 +1,52 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]: Connecting…
+    - button "Retry" [ref=e6] [cursor=pointer]
+  - banner [ref=e7]:
+    - generic [ref=e8]:
+      - button "Landing" [ref=e9] [cursor=pointer]:
+        - img [ref=e10]
+        - generic [ref=e12]: Landing
+      - generic [ref=e13]:
+        - paragraph [ref=e14]: Restaurant
+        - heading "Shared Bill" [level=1] [ref=e15]
+        - generic [ref=e16]:
+          - generic [ref=e17]: "Bill: 8JYSB3"
+          - button "Expand QR code" [ref=e18] [cursor=pointer]:
+            - img "Join QR code" [ref=e19]
+      - generic [ref=e20]:
+        - img "QA Host" [ref=e21]:
+          - img [ref=e22]:
+            - generic [ref=e24]: QH
+        - generic [ref=e25]:
+          - paragraph [ref=e26]: You
+          - paragraph [ref=e27]: QA Host
+          - button "Edit Profile" [ref=e28] [cursor=pointer]
+      - generic [ref=e29]:
+        - button "Rename Bill" [ref=e30] [cursor=pointer]
+        - button "Add Person" [ref=e31] [cursor=pointer]
+    - generic [ref=e32]:
+      - generic [ref=e33]: Bill currency
+      - combobox [ref=e34]:
+        - option "🇺🇸 USD $" [selected]
+        - option "🇪🇺 EUR €"
+        - option "🇬🇧 GBP £"
+        - option "🇯🇵 JPY ¥"
+        - option "🇨🇦 CAD $"
+        - option "🇦🇺 AUD $"
+        - option "🇨🇭 CHF Fr"
+        - option "🇨🇳 CNY ¥"
+        - option "🇰🇷 KRW ₩"
+        - option "🇲🇽 MXN $"
+        - option "🇸🇬 SGD $"
+        - option "🇭🇰 HKD $"
+        - option "🇮🇳 INR ₹"
+        - option "🇸🇪 SEK kr"
+        - option "🇳🇴 NOK kr"
+  - main [ref=e36]:
+    - heading "Items" [level=2] [ref=e39]
+  - generic [ref=e41]:
+    - button "Add Item" [ref=e42] [cursor=pointer]
+    - button "Tax/Tip" [ref=e43] [cursor=pointer]
+    - button "Adjustments" [ref=e44] [cursor=pointer]
+    - button "Summary" [ref=e45] [cursor=pointer]

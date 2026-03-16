@@ -1,0 +1,57 @@
+- generic [ref=e3]:
+  - banner [ref=e7]:
+    - generic [ref=e8]:
+      - generic [ref=e9]:
+        - paragraph [ref=e10]: Restaurant
+        - heading "Shared Bill" [level=1] [ref=e11]
+        - generic [ref=e12]:
+          - generic [ref=e13]: "Bill: 68FVDD"
+          - button "Expand QR code" [ref=e39] [cursor=pointer]:
+            - img "Join QR code" [ref=e40]
+      - generic [ref=e14]:
+        - img [ref=e15]:
+          - img [ref=e16]
+        - generic [ref=e18]:
+          - paragraph [ref=e19]: You
+          - paragraph [ref=e20]: Guest
+          - button "Edit Profile" [ref=e21] [cursor=pointer]
+      - generic [ref=e22]:
+        - button "Rename Bill" [ref=e23] [cursor=pointer]
+        - button "Add Person" [ref=e24] [cursor=pointer]
+    - generic [ref=e25]:
+      - generic [ref=e26]: Bill currency
+      - combobox [ref=e27]:
+        - option "🇺🇸 USD $" [selected]
+        - option "🇪🇺 EUR €"
+        - option "🇬🇧 GBP £"
+        - option "🇯🇵 JPY ¥"
+        - option "🇨🇦 CAD $"
+        - option "🇦🇺 AUD $"
+        - option "🇨🇭 CHF Fr"
+        - option "🇨🇳 CNY ¥"
+        - option "🇰🇷 KRW ₩"
+        - option "🇲🇽 MXN $"
+        - option "🇸🇬 SGD $"
+        - option "🇭🇰 HKD $"
+        - option "🇮🇳 INR ₹"
+        - option "🇸🇪 SEK kr"
+        - option "🇳🇴 NOK kr"
+  - main [ref=e29]:
+    - generic [ref=e31]:
+      - heading "Items" [level=2] [ref=e32]
+      - generic [ref=e41]:
+        - img [ref=e42]
+        - generic [ref=e46]: Upload receipt
+  - generic [ref=e34]:
+    - button "Add Item" [ref=e35] [cursor=pointer]
+    - button "Tax/Tip" [ref=e36] [cursor=pointer]
+    - button "Adjustments" [ref=e37] [cursor=pointer]
+    - button "Summary" [ref=e38] [cursor=pointer]
+  - generic [ref=e48]:
+    - heading "Join this room" [level=3] [ref=e49]
+    - paragraph [ref=e50]: Select someone already in room 68FVDD or enter a new name.
+    - textbox "Your name" [ref=e51]
+    - textbox "Venmo username (optional)" [ref=e52]
+    - generic [ref=e53]:
+      - button "Cancel" [ref=e54] [cursor=pointer]
+      - button "Join" [disabled] [ref=e55]

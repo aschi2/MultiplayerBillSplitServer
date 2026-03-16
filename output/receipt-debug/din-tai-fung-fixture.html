@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Din Tai Fung Fixture</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: start center;
+      padding: 56px 0;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255,255,255,0.12), transparent 35%),
+        linear-gradient(135deg, #1d1a18, #0f0d0c 60%, #1d1a18);
+      font-family: Georgia, serif;
+    }
+    .receipt {
+      width: 520px;
+      background: #f7f2e6;
+      color: #2a2926;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+      padding: 34px 30px 42px;
+      border-radius: 2px;
+      transform: rotate(-2deg);
+    }
+    .mono { font-family: Menlo, Monaco, "SF Mono", monospace; }
+    .brand {
+      text-align: center;
+      margin-bottom: 18px;
+      letter-spacing: 0.08em;
+    }
+    .brand .name {
+      display: block;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      margin-top: 10px;
+    }
+    .center { text-align: center; }
+    .meta, .totals, .tips { margin-top: 18px; }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: end;
+      white-space: pre-wrap;
+    }
+    .items { margin-top: 24px; }
+    .items .row { margin: 6px 0; }
+    .totals .row { font-size: 19px; margin: 8px 0; }
+    .total { font-weight: 800; }
+    .muted { opacity: 0.88; }
+    .divider {
+      border-top: 2px dashed rgba(42,41,38,0.25);
+      margin: 18px 0;
+    }
+    .tips { text-align: center; line-height: 1.55; }
+  </style>
+</head>
+<body>
+  <article class="receipt mono">
+    <header class="brand">
+      <div style="font-size:44px; line-height:1; letter-spacing:0.22em;">鼎泰豐</div>
+      <span class="name">DIN TAI FUNG</span>
+      <div class="center muted" style="margin-top:14px; font-size:18px;">
+        1547 Disneyland Dr<br>
+        Anaheim, CA, 92802
+      </div>
+    </header>
+
+    <section class="meta muted" style="font-size:18px; line-height:1.45;">
+      <div class="row"><span>Server: Miles I</span><span>Table A11</span></div>
+      <div class="row"><span>Check #812</span><span></span></div>
+      <div class="row"><span>Guest Count: 6</span><span></span></div>
+      <div class="row"><span>Ordered:</span><span>3/5/26 9:32 PM</span></div>
+    </section>
+
+    <section class="items" style="font-size:18px; line-height:1.4;">
+      <div class="row"><span>1 Cucumber Salad</span><span>$9.50</span></div>
+      <div class="row"><span>1 Wood Ear Mushrooms w/ Vinegar</span><span>$9.50</span></div>
+      <div class="row"><span>3 Sweet &amp; Sour Pork Baby Back Ribs</span><span>$51.00</span></div>
+      <div class="row"><span>2 Pork Xiao Long Bao</span><span>$37.00</span></div>
+      <div class="row"><span>1 Vegan Dumplings</span><span>$18.00</span></div>
+      <div class="row"><span>2 Shrimp &amp; Pork Spicy Wontons</span><span>$34.00</span></div>
+      <div class="row"><span>1 Vegan Spicy Wontons</span><span>$17.00</span></div>
+      <div class="row"><span>1 String Beans w/ Garlic</span><span>$17.00</span></div>
+      <div class="row"><span>1 Taiwanese Cabbage w/ Garlic</span><span>$16.00</span></div>
+      <div class="row"><span>1 Noodles w/ Sesame Sauce</span><span>$13.00</span></div>
+      <div class="row"><span>1 Vegan Noodles w/ Sesame Sauce</span><span>$13.00</span></div>
+      <div class="row"><span>1 Pork Chop Fried Rice</span><span>$21.00</span></div>
+      <div class="row"><span>1 Chocolate &amp; Mochi XLB</span><span>$14.00</span></div>
+      <div class="row"><span>1 Sesame &amp; Mochi XLB</span><span>$12.50</span></div>
+      <div class="row"><span>1 Side Sea Salt Cream</span><span>$1.50</span></div>
+    </section>
+
+    <section class="totals mono">
+      <div class="row"><span>Subtotal</span><span>$284.00</span></div>
+      <div class="row"><span>Tax</span><span>$22.01</span></div>
+      <div class="row total"><span>Total</span><span>$306.01</span></div>
+    </section>
+
+    <div class="divider"></div>
+
+    <section class="tips muted" style="font-size:18px;">
+      <div><strong>Suggested Tip:</strong></div>
+      <div>22%: (Tip $62.48 Total $368.49)</div>
+      <div>20%: (Tip $56.80 Total $362.81)</div>
+      <div>18%: (Tip $51.12 Total $357.13)</div>
+      <div style="margin-top:12px;">Tip percentages are based on the check price before taxes.</div>
+    </section>
+  </article>
+</body>
+</html>

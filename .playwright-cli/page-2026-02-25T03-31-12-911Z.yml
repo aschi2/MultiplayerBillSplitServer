@@ -1,0 +1,100 @@
+- generic [ref=e3]:
+  - banner [ref=e7]:
+    - generic [ref=e8]:
+      - button "Landing" [ref=e9] [cursor=pointer]:
+        - img [ref=e10]
+        - generic [ref=e12]: Landing
+      - generic [ref=e13]:
+        - paragraph [ref=e14]: Restaurant
+        - heading "Regression Full Test" [level=1] [ref=e43]
+        - generic [ref=e16]:
+          - generic [ref=e17]: "Bill: DQSMBD"
+          - button "Expand QR code" [ref=e44] [cursor=pointer]:
+            - img "Join QR code" [ref=e45]
+      - generic [ref=e18]:
+        - img [ref=e19]:
+          - img [ref=e20]
+        - generic [ref=e22]:
+          - paragraph [ref=e23]: You
+          - paragraph [ref=e24]: Guest
+          - button "Edit Profile" [ref=e25] [cursor=pointer]
+      - generic [ref=e26]:
+        - button "Rename Bill" [ref=e27] [cursor=pointer]
+        - button "Add Person" [ref=e28] [cursor=pointer]
+    - generic [ref=e29]:
+      - generic [ref=e30]: Bill currency
+      - combobox [ref=e31]:
+        - option "🇺🇸 USD $" [selected]
+        - option "🇪🇺 EUR €"
+        - option "🇬🇧 GBP £"
+        - option "🇯🇵 JPY ¥"
+        - option "🇨🇦 CAD $"
+        - option "🇦🇺 AUD $"
+        - option "🇨🇭 CHF Fr"
+        - option "🇨🇳 CNY ¥"
+        - option "🇰🇷 KRW ₩"
+        - option "🇲🇽 MXN $"
+        - option "🇸🇬 SGD $"
+        - option "🇭🇰 HKD $"
+        - option "🇮🇳 INR ₹"
+        - option "🇸🇪 SEK kr"
+        - option "🇳🇴 NOK kr"
+    - generic [ref=e46]:
+      - generic [ref=e47]:
+        - img "QA One" [ref=e49]:
+          - img [ref=e50]:
+            - generic [ref=e52]: QO
+        - generic "Present" [ref=e53]
+      - generic [ref=e54]:
+        - img "Bob" [ref=e56]:
+          - img [ref=e57]:
+            - generic [ref=e59]: B
+        - generic "Present" [ref=e60]
+  - main [ref=e33]:
+    - generic [ref=e35]:
+      - heading "Items" [level=2] [ref=e36]
+      - generic [ref=e61]:
+        - button "Bulk" [ref=e62] [cursor=pointer]
+        - button "Upload receipt" [ref=e63] [cursor=pointer]:
+          - img [ref=e64]
+          - generic [ref=e68]: Upload receipt
+  - generic [ref=e38]:
+    - button "Add Item" [ref=e39] [cursor=pointer]
+    - button "Tax/Tip" [ref=e40] [cursor=pointer]
+    - button "Adjustments" [ref=e41] [cursor=pointer]
+    - button "Summary" [ref=e42] [cursor=pointer]
+  - generic [ref=e70]:
+    - heading "Join this room" [level=3] [ref=e71]
+    - paragraph [ref=e72]: Select someone already in room DQSMBD or enter a new name.
+    - generic [ref=e73]:
+      - paragraph [ref=e74]: People in room
+      - generic [ref=e75]:
+        - button "Bob Active Bob Active now" [ref=e76] [cursor=pointer]:
+          - generic [ref=e77]:
+            - generic [ref=e78]:
+              - img "Bob" [ref=e79]:
+                - img [ref=e80]:
+                  - generic [ref=e82]: B
+              - generic "Active" [ref=e83]
+            - generic [ref=e84]:
+              - generic [ref=e85]: Bob
+              - generic [ref=e86]: Active now
+        - button "QA One Active QA One Active now" [ref=e87] [cursor=pointer]:
+          - generic [ref=e88]:
+            - generic [ref=e89]:
+              - img "QA One" [ref=e90]:
+                - img [ref=e91]:
+                  - generic [ref=e93]: QO
+              - generic "Active" [ref=e94]
+            - generic [ref=e95]:
+              - generic [ref=e96]: QA One
+              - generic [ref=e97]: Active now
+    - generic [ref=e98]:
+      - text: Your name
+      - textbox "Your name" [ref=e99]
+    - generic [ref=e100]:
+      - text: Venmo username (optional)
+      - textbox "Venmo username (optional)" [ref=e101]
+    - generic [ref=e102]:
+      - button "Cancel" [ref=e103] [cursor=pointer]
+      - button "Join" [disabled] [ref=e104]

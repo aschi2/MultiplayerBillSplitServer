@@ -4,6 +4,13 @@
   export let size = 40;
   export let badge: string | null = null;
   export let title: string | undefined;
+  /** When set to a boolean, shows a completion ring: red (false) or green (true). */
+  export let finished: boolean | undefined = undefined;
+
+  $: ringColor = finished === true ? '#22c55e' : finished === false ? '#ef4444' : undefined;
+  $: ringStyle = ringColor
+    ? `box-shadow: 0 0 0 2.5px ${ringColor}; border-radius: 9999px;`
+    : '';
 </script>
 
 <div class="relative inline-block" title={title || initials} aria-label={title || initials} role="img">
@@ -12,6 +19,7 @@
     height={size}
     viewBox={`0 0 ${size} ${size}`}
     class="rounded-full shadow-sm"
+    style={ringStyle}
   >
     <circle cx={size / 2} cy={size / 2} r={size / 2} fill={color} />
     <text

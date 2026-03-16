@@ -1,0 +1,39 @@
+- generic [ref=e2]:
+  - generic [ref=e213]:
+    - banner [ref=e214]:
+      - img "Divvi" [ref=e216]
+      - paragraph [ref=e217]: Split receipts in real time with your group. Built for mobile, fast to use at the table.
+    - main [ref=e218]:
+      - button "Create new bill Start a room and share the code with friends. Create Bill" [ref=e219] [cursor=pointer]:
+        - generic [ref=e221]:
+          - paragraph [ref=e222]: Create new bill
+          - paragraph [ref=e223]: Start a room and share the code with friends.
+        - generic [ref=e225]: Create Bill
+      - button "Join existing bill Enter a code and start assigning items. Join Bill" [ref=e226] [cursor=pointer]:
+        - generic [ref=e228]:
+          - paragraph [ref=e229]: Join existing bill
+          - paragraph [ref=e230]: Enter a code and start assigning items.
+        - generic [ref=e232]: Join Bill
+    - generic [ref=e233]:
+      - generic [ref=e234]:
+        - paragraph [ref=e237]: Your bills
+        - generic "1 saved bill" [ref=e238]: "1"
+      - 'button "PW QA Bill #8JYSB3 03:59:14 Total $33.98 Your share $2.00 QH QA Host (@qahost)" [ref=e260] [cursor=pointer]':
+        - generic [ref=e241]:
+          - generic [ref=e242]:
+            - paragraph [ref=e243]: PW QA Bill
+            - generic [ref=e244]:
+              - generic [ref=e245]: "#8JYSB3"
+              - generic [ref=e247]: 03:59:14
+          - img [ref=e248]
+        - generic [ref=e250]:
+          - generic [ref=e251]:
+            - paragraph [ref=e252]: Total
+            - paragraph [ref=e253]: $33.98
+          - generic [ref=e254]:
+            - paragraph [ref=e255]: Your share
+            - paragraph [ref=e256]: $2.00
+        - generic [ref=e257]:
+          - generic [ref=e258]: QH
+          - generic [ref=e259]: QA Host (@qahost)
+  - generic [ref=e46]: untitled page

@@ -1,0 +1,793 @@
+- generic [ref=e2]:
+  - generic [ref=e54]:
+    - banner [ref=e55]:
+      - generic [ref=e56]:
+        - button "Landing" [ref=e57] [cursor=pointer]:
+          - img [ref=e58]
+          - generic [ref=e60]: Landing
+        - generic [ref=e61]:
+          - paragraph [ref=e62]: Restaurant
+          - heading "Manage Attach Inline" [level=1] [ref=e63]
+          - generic [ref=e64]:
+            - 'button "Bill Code: NJHKSF" [ref=e65] [cursor=pointer]'
+            - button "Expand QR code" [ref=e66] [cursor=pointer]:
+              - img "Join QR code" [ref=e67]
+        - generic [ref=e68]:
+          - img "Inline Verify" [ref=e69]:
+            - img [ref=e70]:
+              - generic [ref=e72]: IV
+          - generic [ref=e73]:
+            - paragraph [ref=e74]: You
+            - paragraph [ref=e75]: Inline Verify
+            - button "Edit Profile" [ref=e76] [cursor=pointer]
+        - generic [ref=e77]:
+          - button "Rename Bill" [ref=e78] [cursor=pointer]
+          - button "Add Person" [ref=e79] [cursor=pointer]
+      - generic [ref=e80]:
+        - generic [ref=e81]: Bill currency
+        - combobox [ref=e82]:
+          - option "🇺🇸 USD $" [selected]
+          - option "🇪🇺 EUR €"
+          - option "🇬🇧 GBP £"
+          - option "🇯🇵 JPY ¥"
+          - option "🇨🇦 CAD $"
+          - option "🇦🇺 AUD $"
+          - option "🇨🇭 CHF Fr"
+          - option "🇨🇳 CNY ¥"
+          - option "🇰🇷 KRW ₩"
+          - option "🇲🇽 MXN $"
+          - option "🇸🇬 SGD $"
+          - option "🇭🇰 HKD $"
+          - option "🇮🇳 INR ₹"
+          - option "🇸🇪 SEK kr"
+          - option "🇳🇴 NOK kr"
+      - generic [ref=e85]:
+        - img "Inline Verify" [ref=e87]:
+          - img [ref=e88]:
+            - generic [ref=e90]: IV
+        - generic "Present" [ref=e91]
+    - main [ref=e92]:
+      - generic [ref=e110]:
+        - generic [ref=e111]: Receipt parsed with 2 notes—review recommended.
+        - button "Review" [ref=e112] [cursor=pointer]
+      - generic [ref=e94]:
+        - heading "Items" [level=2] [ref=e95]
+        - generic [ref=e96]:
+          - button "Bulk" [ref=e97] [cursor=pointer]
+          - button "Upload receipt" [ref=e98] [cursor=pointer]:
+            - img [ref=e99]
+            - generic [ref=e103]: Upload receipt
+    - generic [ref=e105]:
+      - button "Add Item" [ref=e106] [cursor=pointer]
+      - button "Tax/Tip" [ref=e107] [cursor=pointer]
+      - button "Adjustments" [ref=e108] [cursor=pointer]
+      - button "Summary" [ref=e109] [cursor=pointer]
+    - generic [ref=e114]:
+      - heading "Review receipt" [level=3] [ref=e115]
+      - paragraph [ref=e116]: Edit aggregated lines before importing. Prices are gross (pre-discount).
+      - generic [ref=e117]:
+        - generic [ref=e118]: Receipt Currency
+        - combobox [ref=e119]:
+          - option "🇺🇸 USD $" [selected]
+          - option "🇪🇺 EUR €"
+          - option "🇬🇧 GBP £"
+          - option "🇯🇵 JPY ¥"
+          - option "🇨🇦 CAD $"
+          - option "🇦🇺 AUD $"
+          - option "🇨🇭 CHF Fr"
+          - option "🇨🇳 CNY ¥"
+          - option "🇰🇷 KRW ₩"
+          - option "🇲🇽 MXN $"
+          - option "🇸🇬 SGD $"
+          - option "🇭🇰 HKD $"
+          - option "🇮🇳 INR ₹"
+          - option "🇸🇪 SEK kr"
+          - option "🇳🇴 NOK kr"
+      - generic [ref=e121]:
+        - generic [ref=e122]:
+          - paragraph [ref=e123]: Need a second pass?
+          - paragraph [ref=e124]: If any lines look off, run a deeper retry before importing.
+        - button "Try Again" [ref=e125] [cursor=pointer]
+      - generic [ref=e126]:
+        - generic [ref=e127]: Notes from parser
+        - list [ref=e128]:
+          - listitem [ref=e129]: Consolidated 12 likely modifier rows into add-ons.
+          - listitem [ref=e130]: Recovered 13 item lines from dense receipt text (replaced 9 sparse parsed items).
+      - generic [ref=e131]:
+        - paragraph [ref=e133]: Item 1
+        - generic [ref=e134]:
+          - text: Item Name
+          - textbox "Item Name" [ref=e135]: Fried Green Tomatoes
+        - generic [ref=e136]:
+          - generic [ref=e137]:
+            - paragraph [ref=e138]: Pricing
+            - button "Edit total" [ref=e139] [cursor=pointer]
+          - generic [ref=e140]:
+            - generic [ref=e141]:
+              - text: Quantity
+              - spinbutton "Quantity" [ref=e142]: "1"
+            - generic [ref=e143]:
+              - text: Unit Price ($)
+              - spinbutton "Unit Price ($)" [ref=e144]: "8.00"
+          - generic [ref=e146]:
+            - generic [ref=e147]: Total
+            - generic [ref=e148]: 1 × $8.00 = $8.00
+        - generic [ref=e150]:
+          - text: Discount
+          - generic [ref=e151]:
+            - spinbutton "Discount $ %" [ref=e152]
+            - generic [ref=e153]:
+              - button "$" [pressed] [ref=e154] [cursor=pointer]
+              - button "%" [ref=e155] [cursor=pointer]
+        - generic [ref=e157]:
+          - generic [ref=e158]:
+            - paragraph [ref=e159]: Add-ons
+            - paragraph [ref=e160]: 0 add-ons · per-item total $0.00
+          - button "Manage" [ref=e161] [cursor=pointer]
+        - generic [ref=e163]:
+          - generic [ref=e164]:
+            - generic [ref=e165]: Final per item
+            - generic [ref=e166]: $8.00
+          - generic [ref=e167]:
+            - generic [ref=e168]: Final line total
+            - generic [ref=e169]: $8.00
+        - generic [ref=e170]:
+          - button "Close attach" [active] [ref=e810] [cursor=pointer]
+          - button "Remove" [ref=e172] [cursor=pointer]:
+            - img [ref=e173]
+            - generic [ref=e176]: Remove
+        - generic [ref=e811]:
+          - paragraph [ref=e812]: Choose the parent item for "Fried Green Tomatoes".
+          - generic [ref=e813]:
+            - 'button "Ranch (App Only) Current total: $3.00 Attach" [ref=e814] [cursor=pointer]':
+              - generic [ref=e815]:
+                - generic [ref=e816]:
+                  - generic [ref=e817]: Ranch (App Only)
+                  - generic [ref=e818]: "Current total: $3.00"
+                - generic [ref=e819]: Attach
+            - 'button "Diet Coke Current total: $6.00 Attach" [ref=e820] [cursor=pointer]':
+              - generic [ref=e821]:
+                - generic [ref=e822]:
+                  - generic [ref=e823]: Diet Coke
+                  - generic [ref=e824]: "Current total: $6.00"
+                - generic [ref=e825]: Attach
+            - 'button "(12oz) Sapporo Current total: $18.00 Attach" [ref=e826] [cursor=pointer]':
+              - generic [ref=e827]:
+                - generic [ref=e828]:
+                  - generic [ref=e829]: (12oz) Sapporo
+                  - generic [ref=e830]: "Current total: $18.00"
+                - generic [ref=e831]: Attach
+            - 'button "1/2 Chicken Plate Current total: $3.00 Attach" [ref=e832] [cursor=pointer]':
+              - generic [ref=e833]:
+                - generic [ref=e834]:
+                  - generic [ref=e835]: 1/2 Chicken Plate
+                  - generic [ref=e836]: "Current total: $3.00"
+                - generic [ref=e837]: Attach
+            - 'button "Side Slaw Current total: $0.50 Attach" [ref=e838] [cursor=pointer]':
+              - generic [ref=e839]:
+                - generic [ref=e840]:
+                  - generic [ref=e841]: Side Slaw
+                  - generic [ref=e842]: "Current total: $0.50"
+                - generic [ref=e843]: Attach
+            - 'button "Breast Current total: $2.00 Attach" [ref=e844] [cursor=pointer]':
+              - generic [ref=e845]:
+                - generic [ref=e846]:
+                  - generic [ref=e847]: Breast
+                  - generic [ref=e848]: "Current total: $2.00"
+                - generic [ref=e849]: Attach
+            - 'button "Side Mac & Cheese Current total: $17.00 Attach" [ref=e850] [cursor=pointer]':
+              - generic [ref=e851]:
+                - generic [ref=e852]:
+                  - generic [ref=e853]: Side Mac & Cheese
+                  - generic [ref=e854]: "Current total: $17.00"
+                - generic [ref=e855]: Attach
+            - 'button "Piece Dark Plate Current total: $4.00 Attach" [ref=e856] [cursor=pointer]':
+              - generic [ref=e857]:
+                - generic [ref=e858]:
+                  - generic [ref=e859]: Piece Dark Plate
+                  - generic [ref=e860]: "Current total: $4.00"
+                - generic [ref=e861]: Attach
+            - 'button "Side Mac & Cheese Current total: $0.50 Attach" [ref=e862] [cursor=pointer]':
+              - generic [ref=e863]:
+                - generic [ref=e864]:
+                  - generic [ref=e865]: Side Mac & Cheese
+                  - generic [ref=e866]: "Current total: $0.50"
+                - generic [ref=e867]: Attach
+            - 'button "Side Fries Current total: $0.50 Attach" [ref=e868] [cursor=pointer]':
+              - generic [ref=e869]:
+                - generic [ref=e870]:
+                  - generic [ref=e871]: Side Fries
+                  - generic [ref=e872]: "Current total: $0.50"
+                - generic [ref=e873]: Attach
+            - 'button "Pecan Pie (Slice) Current total: $7.00 Attach" [ref=e874] [cursor=pointer]':
+              - generic [ref=e875]:
+                - generic [ref=e876]:
+                  - generic [ref=e877]: Pecan Pie (Slice)
+                  - generic [ref=e878]: "Current total: $7.00"
+                - generic [ref=e879]: Attach
+            - 'button "Coconut Pie (Slice) Current total: $7.00 Attach" [ref=e880] [cursor=pointer]':
+              - generic [ref=e881]:
+                - generic [ref=e882]:
+                  - generic [ref=e883]: Coconut Pie (Slice)
+                  - generic [ref=e884]: "Current total: $7.00"
+                - generic [ref=e885]: Attach
+          - button "Cancel" [ref=e886] [cursor=pointer]
+      - generic [ref=e177]:
+        - paragraph [ref=e179]: Item 2
+        - generic [ref=e180]:
+          - text: Item Name
+          - textbox "Item Name" [ref=e181]: Ranch (App Only)
+        - generic [ref=e182]:
+          - generic [ref=e183]:
+            - paragraph [ref=e184]: Pricing
+            - button "Edit total" [ref=e185] [cursor=pointer]
+          - generic [ref=e186]:
+            - generic [ref=e187]:
+              - text: Quantity
+              - spinbutton "Quantity" [ref=e188]: "1"
+            - generic [ref=e189]:
+              - text: Unit Price ($)
+              - spinbutton "Unit Price ($)" [ref=e190]: "3.00"
+          - generic [ref=e192]:
+            - generic [ref=e193]: Total
+            - generic [ref=e194]: 1 × $3.00 = $3.00
+        - generic [ref=e196]:
+          - text: Discount
+          - generic [ref=e197]:
+            - spinbutton "Discount $ %" [ref=e198]
+            - generic [ref=e199]:
+              - button "$" [pressed] [ref=e200] [cursor=pointer]
+              - button "%" [ref=e201] [cursor=pointer]
+        - generic [ref=e203]:
+          - generic [ref=e204]:
+            - paragraph [ref=e205]: Add-ons
+            - paragraph [ref=e206]: 0 add-ons · per-item total $0.00
+          - button "Manage" [ref=e207] [cursor=pointer]
+        - generic [ref=e209]:
+          - generic [ref=e210]:
+            - generic [ref=e211]: Final per item
+            - generic [ref=e212]: $3.00
+          - generic [ref=e213]:
+            - generic [ref=e214]: Final line total
+            - generic [ref=e215]: $3.00
+        - generic [ref=e216]:
+          - button "Attach as add-on" [ref=e217] [cursor=pointer]
+          - button "Remove" [ref=e218] [cursor=pointer]:
+            - img [ref=e219]
+            - generic [ref=e222]: Remove
+      - generic [ref=e223]:
+        - paragraph [ref=e225]: Item 3
+        - generic [ref=e226]:
+          - text: Item Name
+          - textbox "Item Name" [ref=e227]: Diet Coke
+        - generic [ref=e228]:
+          - generic [ref=e229]:
+            - paragraph [ref=e230]: Pricing
+            - button "Edit total" [ref=e231] [cursor=pointer]
+          - generic [ref=e232]:
+            - generic [ref=e233]:
+              - text: Quantity
+              - spinbutton "Quantity" [ref=e234]: "1"
+            - generic [ref=e235]:
+              - text: Unit Price ($)
+              - spinbutton "Unit Price ($)" [ref=e236]: "6.00"
+          - generic [ref=e238]:
+            - generic [ref=e239]: Total
+            - generic [ref=e240]: 1 × $6.00 = $6.00
+        - generic [ref=e242]:
+          - text: Discount
+          - generic [ref=e243]:
+            - spinbutton "Discount $ %" [ref=e244]
+            - generic [ref=e245]:
+              - button "$" [pressed] [ref=e246] [cursor=pointer]
+              - button "%" [ref=e247] [cursor=pointer]
+        - generic [ref=e249]:
+          - generic [ref=e250]:
+            - paragraph [ref=e251]: Add-ons
+            - paragraph [ref=e252]: 0 add-ons · per-item total $0.00
+          - button "Manage" [ref=e253] [cursor=pointer]
+        - generic [ref=e255]:
+          - generic [ref=e256]:
+            - generic [ref=e257]: Final per item
+            - generic [ref=e258]: $6.00
+          - generic [ref=e259]:
+            - generic [ref=e260]: Final line total
+            - generic [ref=e261]: $6.00
+        - generic [ref=e262]:
+          - button "Attach as add-on" [ref=e263] [cursor=pointer]
+          - button "Remove" [ref=e264] [cursor=pointer]:
+            - img [ref=e265]
+            - generic [ref=e268]: Remove
+      - generic [ref=e269]:
+        - paragraph [ref=e271]: Item 4
+        - generic [ref=e272]:
+          - text: Item Name
+          - textbox "Item Name" [ref=e273]: (12oz) Sapporo
+        - generic [ref=e274]:
+          - generic [ref=e275]:
+            - paragraph [ref=e276]: Pricing
+            - button "Edit total" [ref=e277] [cursor=pointer]
+          - generic [ref=e278]:
+            - generic [ref=e279]:
+              - text: Quantity
+              - spinbutton "Quantity" [ref=e280]: "1"
+            - generic [ref=e281]:
+              - text: Unit Price ($)
+              - spinbutton "Unit Price ($)" [ref=e282]: "18.00"
+          - generic [ref=e284]:
+            - generic [ref=e285]: Total
+            - generic [ref=e286]: 1 × $18.00 = $18.00
+        - generic [ref=e288]:
+          - text: Discount
+          - generic [ref=e289]:
+            - spinbutton "Discount $ %" [ref=e290]
+            - generic [ref=e291]:
+              - button "$" [pressed] [ref=e292] [cursor=pointer]
+              - button "%" [ref=e293] [cursor=pointer]
+        - generic [ref=e295]:
+          - generic [ref=e296]:
+            - paragraph [ref=e297]: Add-ons
+            - paragraph [ref=e298]: 0 add-ons · per-item total $0.00
+          - button "Manage" [ref=e299] [cursor=pointer]
+        - generic [ref=e301]:
+          - generic [ref=e302]:
+            - generic [ref=e303]: Final per item
+            - generic [ref=e304]: $18.00
+          - generic [ref=e305]:
+            - generic [ref=e306]: Final line total
+            - generic [ref=e307]: $18.00
+        - generic [ref=e308]:
+          - button "Attach as add-on" [ref=e309] [cursor=pointer]
+          - button "Remove" [ref=e310] [cursor=pointer]:
+            - img [ref=e311]
+            - generic [ref=e314]: Remove
+      - generic [ref=e315]:
+        - paragraph [ref=e317]: Item 5
+        - generic [ref=e318]:
+          - text: Item Name
+          - textbox "Item Name" [ref=e319]: 1/2 Chicken Plate
+        - generic [ref=e320]:
+          - generic [ref=e321]:
+            - paragraph [ref=e322]: Pricing
+            - button "Edit total" [ref=e323] [cursor=pointer]
+          - generic [ref=e324]:
+            - generic [ref=e325]:
+              - text: Quantity
+              - spinbutton "Quantity" [ref=e326]: "1"
+            - generic [ref=e327]:
+              - text: Unit Price ($)
+              - spinbutton "Unit Price ($)" [ref=e328]: "3.00"
+          - generic [ref=e330]:
+            - generic [ref=e331]: Total
+            - generic [ref=e332]: 1 × $3.00 = $3.00
+        - generic [ref=e334]:
+          - text: Discount
+          - generic [ref=e335]:
+            - spinbutton "Discount $ %" [ref=e336]
+            - generic [ref=e337]:
+              - button "$" [pressed] [ref=e338] [cursor=pointer]
+              - button "%" [ref=e339] [cursor=pointer]
+        - generic [ref=e341]:
+          - generic [ref=e342]:
+            - paragraph [ref=e343]: Add-ons
+            - paragraph [ref=e344]: 0 add-ons · per-item total $0.00
+          - button "Manage" [ref=e345] [cursor=pointer]
+        - generic [ref=e347]:
+          - generic [ref=e348]:
+            - generic [ref=e349]: Final per item
+            - generic [ref=e350]: $3.00
+          - generic [ref=e351]:
+            - generic [ref=e352]: Final line total
+            - generic [ref=e353]: $3.00
+        - generic [ref=e354]:
+          - button "Attach as add-on" [ref=e355] [cursor=pointer]
+          - button "Remove" [ref=e356] [cursor=pointer]:
+            - img [ref=e357]
+            - generic [ref=e360]: Remove
+      - generic [ref=e361]:
+        - paragraph [ref=e363]: Item 6
+        - generic [ref=e364]:
+          - text: Item Name
+          - textbox "Item Name" [ref=e365]: Side Slaw
+        - generic [ref=e366]:
+          - generic [ref=e367]:
+            - paragraph [ref=e368]: Pricing
+            - button "Edit total" [ref=e369] [cursor=pointer]
+          - generic [ref=e370]:
+            - generic [ref=e371]:
+              - text: Quantity
+              - spinbutton "Quantity" [ref=e372]: "1"
+            - generic [ref=e373]:
+              - text: Unit Price ($)
+              - spinbutton "Unit Price ($)" [ref=e374]: "0.50"
+          - generic [ref=e376]:
+            - generic [ref=e377]: Total
+            - generic [ref=e378]: 1 × $0.50 = $0.50
+        - generic [ref=e380]:
+          - text: Discount
+          - generic [ref=e381]:
+            - spinbutton "Discount $ %" [ref=e382]
+            - generic [ref=e383]:
+              - button "$" [pressed] [ref=e384] [cursor=pointer]
+              - button "%" [ref=e385] [cursor=pointer]
+        - generic [ref=e387]:
+          - generic [ref=e388]:
+            - paragraph [ref=e389]: Add-ons
+            - paragraph [ref=e390]: 0 add-ons · per-item total $0.00
+          - button "Manage" [ref=e391] [cursor=pointer]
+        - generic [ref=e393]:
+          - generic [ref=e394]:
+            - generic [ref=e395]: Final per item
+            - generic [ref=e396]: $0.50
+          - generic [ref=e397]:
+            - generic [ref=e398]: Final line total
+            - generic [ref=e399]: $0.50
+        - generic [ref=e400]:
+          - button "Attach as add-on" [ref=e401] [cursor=pointer]
+          - button "Remove" [ref=e402] [cursor=pointer]:
+            - img [ref=e403]
+            - generic [ref=e406]: Remove
+      - generic [ref=e407]:
+        - paragraph [ref=e409]: Item 7
+        - generic [ref=e410]:
+          - text: Item Name
+          - textbox "Item Name" [ref=e411]: Breast
+        - generic [ref=e412]:
+          - generic [ref=e413]:
+            - paragraph [ref=e414]: Pricing
+            - button "Edit total" [ref=e415] [cursor=pointer]
+          - generic [ref=e416]:
+            - generic [ref=e417]:
+              - text: Quantity
+              - spinbutton "Quantity" [ref=e418]: "1"
+            - generic [ref=e419]:
+              - text: Unit Price ($)
+              - spinbutton "Unit Price ($)" [ref=e420]: "2.00"
+          - generic [ref=e422]:
+            - generic [ref=e423]: Total
+            - generic [ref=e424]: 1 × $2.00 = $2.00
+        - generic [ref=e426]:
+          - text: Discount
+          - generic [ref=e427]:
+            - spinbutton "Discount $ %" [ref=e428]
+            - generic [ref=e429]:
+              - button "$" [pressed] [ref=e430] [cursor=pointer]
+              - button "%" [ref=e431] [cursor=pointer]
+        - generic [ref=e433]:
+          - generic [ref=e434]:
+            - paragraph [ref=e435]: Add-ons
+            - paragraph [ref=e436]: 0 add-ons · per-item total $0.00
+          - button "Manage" [ref=e437] [cursor=pointer]
+        - generic [ref=e439]:
+          - generic [ref=e440]:
+            - generic [ref=e441]: Final per item
+            - generic [ref=e442]: $2.00
+          - generic [ref=e443]:
+            - generic [ref=e444]: Final line total
+            - generic [ref=e445]: $2.00
+        - generic [ref=e446]:
+          - button "Attach as add-on" [ref=e447] [cursor=pointer]
+          - button "Remove" [ref=e448] [cursor=pointer]:
+            - img [ref=e449]
+            - generic [ref=e452]: Remove
+      - generic [ref=e453]:
+        - paragraph [ref=e455]: Item 8
+        - generic [ref=e456]:
+          - text: Item Name
+          - textbox "Item Name" [ref=e457]: Side Mac & Cheese
+        - generic [ref=e458]:
+          - generic [ref=e459]:
+            - paragraph [ref=e460]: Pricing
+            - button "Edit total" [ref=e461] [cursor=pointer]
+          - generic [ref=e462]:
+            - generic [ref=e463]:
+              - text: Quantity
+              - spinbutton "Quantity" [ref=e464]: "1"
+            - generic [ref=e465]:
+              - text: Unit Price ($)
+              - spinbutton "Unit Price ($)" [ref=e466]: "17.00"
+          - generic [ref=e468]:
+            - generic [ref=e469]: Total
+            - generic [ref=e470]: 1 × $17.00 = $17.00
+        - generic [ref=e472]:
+          - text: Discount
+          - generic [ref=e473]:
+            - spinbutton "Discount $ %" [ref=e474]
+            - generic [ref=e475]:
+              - button "$" [pressed] [ref=e476] [cursor=pointer]
+              - button "%" [ref=e477] [cursor=pointer]
+        - generic [ref=e479]:
+          - generic [ref=e480]:
+            - paragraph [ref=e481]: Add-ons
+            - paragraph [ref=e482]: 0 add-ons · per-item total $0.00
+          - button "Manage" [ref=e483] [cursor=pointer]
+        - generic [ref=e485]:
+          - generic [ref=e486]:
+            - generic [ref=e487]: Final per item
+            - generic [ref=e488]: $17.00
+          - generic [ref=e489]:
+            - generic [ref=e490]: Final line total
+            - generic [ref=e491]: $17.00
+        - generic [ref=e492]:
+          - button "Attach as add-on" [ref=e493] [cursor=pointer]
+          - button "Remove" [ref=e494] [cursor=pointer]:
+            - img [ref=e495]
+            - generic [ref=e498]: Remove
+      - generic [ref=e499]:
+        - paragraph [ref=e501]: Item 9
+        - generic [ref=e502]:
+          - text: Item Name
+          - textbox "Item Name" [ref=e503]: Piece Dark Plate
+        - generic [ref=e504]:
+          - generic [ref=e505]:
+            - paragraph [ref=e506]: Pricing
+            - button "Edit total" [ref=e507] [cursor=pointer]
+          - generic [ref=e508]:
+            - generic [ref=e509]:
+              - text: Quantity
+              - spinbutton "Quantity" [ref=e510]: "1"
+            - generic [ref=e511]:
+              - text: Unit Price ($)
+              - spinbutton "Unit Price ($)" [ref=e512]: "4.00"
+          - generic [ref=e514]:
+            - generic [ref=e515]: Total
+            - generic [ref=e516]: 1 × $4.00 = $4.00
+        - generic [ref=e518]:
+          - text: Discount
+          - generic [ref=e519]:
+            - spinbutton "Discount $ %" [ref=e520]
+            - generic [ref=e521]:
+              - button "$" [pressed] [ref=e522] [cursor=pointer]
+              - button "%" [ref=e523] [cursor=pointer]
+        - generic [ref=e525]:
+          - generic [ref=e526]:
+            - paragraph [ref=e527]: Add-ons
+            - paragraph [ref=e528]: 0 add-ons · per-item total $0.00
+          - button "Manage" [ref=e529] [cursor=pointer]
+        - generic [ref=e531]:
+          - generic [ref=e532]:
+            - generic [ref=e533]: Final per item
+            - generic [ref=e534]: $4.00
+          - generic [ref=e535]:
+            - generic [ref=e536]: Final line total
+            - generic [ref=e537]: $4.00
+        - generic [ref=e538]:
+          - button "Attach as add-on" [ref=e539] [cursor=pointer]
+          - button "Remove" [ref=e540] [cursor=pointer]:
+            - img [ref=e541]
+            - generic [ref=e544]: Remove
+      - generic [ref=e545]:
+        - paragraph [ref=e547]: Item 10
+        - generic [ref=e548]:
+          - text: Item Name
+          - textbox "Item Name" [ref=e549]: Side Mac & Cheese
+        - generic [ref=e550]:
+          - generic [ref=e551]:
+            - paragraph [ref=e552]: Pricing
+            - button "Edit total" [ref=e553] [cursor=pointer]
+          - generic [ref=e554]:
+            - generic [ref=e555]:
+              - text: Quantity
+              - spinbutton "Quantity" [ref=e556]: "1"
+            - generic [ref=e557]:
+              - text: Unit Price ($)
+              - spinbutton "Unit Price ($)" [ref=e558]: "0.50"
+          - generic [ref=e560]:
+            - generic [ref=e561]: Total
+            - generic [ref=e562]: 1 × $0.50 = $0.50
+        - generic [ref=e564]:
+          - text: Discount
+          - generic [ref=e565]:
+            - spinbutton "Discount $ %" [ref=e566]
+            - generic [ref=e567]:
+              - button "$" [pressed] [ref=e568] [cursor=pointer]
+              - button "%" [ref=e569] [cursor=pointer]
+        - generic [ref=e571]:
+          - generic [ref=e572]:
+            - paragraph [ref=e573]: Add-ons
+            - paragraph [ref=e574]: 0 add-ons · per-item total $0.00
+          - button "Manage" [ref=e575] [cursor=pointer]
+        - generic [ref=e577]:
+          - generic [ref=e578]:
+            - generic [ref=e579]: Final per item
+            - generic [ref=e580]: $0.50
+          - generic [ref=e581]:
+            - generic [ref=e582]: Final line total
+            - generic [ref=e583]: $0.50
+        - generic [ref=e584]:
+          - button "Attach as add-on" [ref=e585] [cursor=pointer]
+          - button "Remove" [ref=e586] [cursor=pointer]:
+            - img [ref=e587]
+            - generic [ref=e590]: Remove
+      - generic [ref=e591]:
+        - paragraph [ref=e593]: Item 11
+        - generic [ref=e594]:
+          - text: Item Name
+          - textbox "Item Name" [ref=e595]: Side Fries
+        - generic [ref=e596]:
+          - generic [ref=e597]:
+            - paragraph [ref=e598]: Pricing
+            - button "Edit total" [ref=e599] [cursor=pointer]
+          - generic [ref=e600]:
+            - generic [ref=e601]:
+              - text: Quantity
+              - spinbutton "Quantity" [ref=e602]: "1"
+            - generic [ref=e603]:
+              - text: Unit Price ($)
+              - spinbutton "Unit Price ($)" [ref=e604]: "0.50"
+          - generic [ref=e606]:
+            - generic [ref=e607]: Total
+            - generic [ref=e608]: 1 × $0.50 = $0.50
+        - generic [ref=e610]:
+          - text: Discount
+          - generic [ref=e611]:
+            - spinbutton "Discount $ %" [ref=e612]
+            - generic [ref=e613]:
+              - button "$" [pressed] [ref=e614] [cursor=pointer]
+              - button "%" [ref=e615] [cursor=pointer]
+        - generic [ref=e617]:
+          - generic [ref=e618]:
+            - paragraph [ref=e619]: Add-ons
+            - paragraph [ref=e620]: 0 add-ons · per-item total $0.00
+          - button "Manage" [ref=e621] [cursor=pointer]
+        - generic [ref=e623]:
+          - generic [ref=e624]:
+            - generic [ref=e625]: Final per item
+            - generic [ref=e626]: $0.50
+          - generic [ref=e627]:
+            - generic [ref=e628]: Final line total
+            - generic [ref=e629]: $0.50
+        - generic [ref=e630]:
+          - button "Attach as add-on" [ref=e631] [cursor=pointer]
+          - button "Remove" [ref=e632] [cursor=pointer]:
+            - img [ref=e633]
+            - generic [ref=e636]: Remove
+      - generic [ref=e637]:
+        - paragraph [ref=e639]: Item 12
+        - generic [ref=e640]:
+          - text: Item Name
+          - textbox "Item Name" [ref=e641]: Pecan Pie (Slice)
+        - generic [ref=e642]:
+          - generic [ref=e643]:
+            - paragraph [ref=e644]: Pricing
+            - button "Edit total" [ref=e645] [cursor=pointer]
+          - generic [ref=e646]:
+            - generic [ref=e647]:
+              - text: Quantity
+              - spinbutton "Quantity" [ref=e648]: "1"
+            - generic [ref=e649]:
+              - text: Unit Price ($)
+              - spinbutton "Unit Price ($)" [ref=e650]: "7.00"
+          - generic [ref=e652]:
+            - generic [ref=e653]: Total
+            - generic [ref=e654]: 1 × $7.00 = $7.00
+        - generic [ref=e656]:
+          - text: Discount
+          - generic [ref=e657]:
+            - spinbutton "Discount $ %" [ref=e658]
+            - generic [ref=e659]:
+              - button "$" [pressed] [ref=e660] [cursor=pointer]
+              - button "%" [ref=e661] [cursor=pointer]
+        - generic [ref=e663]:
+          - generic [ref=e664]:
+            - paragraph [ref=e665]: Add-ons
+            - paragraph [ref=e666]: 0 add-ons · per-item total $0.00
+          - button "Manage" [ref=e667] [cursor=pointer]
+        - generic [ref=e669]:
+          - generic [ref=e670]:
+            - generic [ref=e671]: Final per item
+            - generic [ref=e672]: $7.00
+          - generic [ref=e673]:
+            - generic [ref=e674]: Final line total
+            - generic [ref=e675]: $7.00
+        - generic [ref=e676]:
+          - button "Attach as add-on" [ref=e677] [cursor=pointer]
+          - button "Remove" [ref=e678] [cursor=pointer]:
+            - img [ref=e679]
+            - generic [ref=e682]: Remove
+      - generic [ref=e683]:
+        - paragraph [ref=e685]: Item 13
+        - generic [ref=e686]:
+          - text: Item Name
+          - textbox "Item Name" [ref=e687]: Coconut Pie (Slice)
+        - generic [ref=e688]:
+          - generic [ref=e689]:
+            - paragraph [ref=e690]: Pricing
+            - button "Edit total" [ref=e691] [cursor=pointer]
+          - generic [ref=e692]:
+            - generic [ref=e693]:
+              - text: Quantity
+              - spinbutton "Quantity" [ref=e694]: "1"
+            - generic [ref=e695]:
+              - text: Unit Price ($)
+              - spinbutton "Unit Price ($)" [ref=e696]: "7.00"
+          - generic [ref=e698]:
+            - generic [ref=e699]: Total
+            - generic [ref=e700]: 1 × $7.00 = $7.00
+        - generic [ref=e702]:
+          - text: Discount
+          - generic [ref=e703]:
+            - spinbutton "Discount $ %" [ref=e704]
+            - generic [ref=e705]:
+              - button "$" [pressed] [ref=e706] [cursor=pointer]
+              - button "%" [ref=e707] [cursor=pointer]
+        - generic [ref=e709]:
+          - generic [ref=e710]:
+            - paragraph [ref=e711]: Add-ons
+            - paragraph [ref=e712]: 0 add-ons · per-item total $0.00
+          - button "Manage" [ref=e713] [cursor=pointer]
+        - generic [ref=e715]:
+          - generic [ref=e716]:
+            - generic [ref=e717]: Final per item
+            - generic [ref=e718]: $7.00
+          - generic [ref=e719]:
+            - generic [ref=e720]: Final line total
+            - generic [ref=e721]: $7.00
+        - generic [ref=e722]:
+          - button "Attach as add-on" [ref=e723] [cursor=pointer]
+          - button "Remove" [ref=e724] [cursor=pointer]:
+            - img [ref=e725]
+            - generic [ref=e728]: Remove
+      - generic [ref=e729]:
+        - generic [ref=e730]:
+          - generic [ref=e731]:
+            - paragraph [ref=e732]: Receipt-level discount
+            - paragraph [ref=e733]: Stored as a bill-wide discount and split by item cost.
+          - generic [ref=e734]:
+            - generic [ref=e735]: $
+            - spinbutton [ref=e736]
+        - generic [ref=e737]:
+          - generic [ref=e738]:
+            - paragraph [ref=e739]: Receipt-level non-tip charges
+            - paragraph [ref=e740]: Service/admin/convenience fees, split by item cost, excluded from tip base.
+          - generic [ref=e741]:
+            - generic [ref=e742]: $
+            - spinbutton [ref=e743]
+        - generic [ref=e744]: "Effective receipt subtotal after discounts: $76.50"
+        - generic [ref=e745]: "Pre-discount items subtotal (tip base): $76.50"
+        - generic [ref=e746]:
+          - generic [ref=e747]:
+            - paragraph [ref=e748]: This receipt tax
+            - paragraph [ref=e749]: "Tax % from effective subtotal: 9.27%"
+          - generic [ref=e750]:
+            - generic [ref=e751]: $
+            - spinbutton [ref=e752]: "7.09"
+        - generic [ref=e753]:
+          - generic [ref=e754]:
+            - paragraph [ref=e755]: This receipt tip / gratuity
+            - paragraph [ref=e756]: "Tip % from pre-discount items subtotal: 0.00%"
+            - paragraph [ref=e757]: Only include tip/gratuity already charged on the bill, not suggested tip options.
+          - generic [ref=e758]:
+            - generic [ref=e759]: $
+            - spinbutton [ref=e760]
+        - generic [ref=e761]:
+          - paragraph [ref=e763]: Projected total tax
+          - generic [ref=e764]:
+            - generic [ref=e765]: $7.09
+            - generic [ref=e766]: "Total tax %: 9.27%"
+        - generic [ref=e767]:
+          - paragraph [ref=e769]: Projected total tip / gratuity
+          - generic [ref=e770]:
+            - generic [ref=e771]: $0.00
+            - generic [ref=e772]: "Total tip %: 0.00%"
+        - generic [ref=e773]:
+          - paragraph [ref=e775]: Projected total bill-wide discount
+          - generic [ref=e776]:
+            - generic [ref=e777]: $0.00
+            - generic [ref=e778]: "Total discount %: 0.00%"
+        - generic [ref=e779]:
+          - paragraph [ref=e781]: Projected total non-tip charges
+          - generic [ref=e782]:
+            - generic [ref=e783]: $0.00
+            - generic [ref=e784]: "Total non-tip charges %: 0.00%"
+        - generic [ref=e786]:
+          - generic [ref=e787]:
+            - paragraph [ref=e788]: Projected bill total after import
+            - paragraph [ref=e789]: $0.00 + $83.59 = $83.59
+          - generic [ref=e790]:
+            - generic [ref=e791]: After import
+            - generic [ref=e792]: $83.59
+            - generic [ref=e793]: "This receipt: $83.59"
+      - button "Import Items & Bill Totals" [ref=e794] [cursor=pointer]
+      - button "Cancel" [ref=e795] [cursor=pointer]
+  - generic [ref=e40]: untitled page

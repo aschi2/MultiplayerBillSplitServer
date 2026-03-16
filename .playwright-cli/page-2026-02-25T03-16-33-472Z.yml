@@ -1,0 +1,206 @@
+- generic [ref=e3]:
+  - banner [ref=e7]:
+    - generic [ref=e8]:
+      - button "Landing" [ref=e9] [cursor=pointer]:
+        - img [ref=e10]
+        - generic [ref=e12]: Landing
+      - generic [ref=e13]:
+        - paragraph [ref=e14]: Restaurant
+        - heading "PW QA Bill" [level=1] [ref=e43]
+        - generic [ref=e16]:
+          - generic [ref=e17]: "Bill: 8JYSB3"
+          - button "Expand QR code" [ref=e44] [cursor=pointer]:
+            - img "Join QR code" [ref=e45]
+      - generic [ref=e18]:
+        - img [ref=e19]:
+          - img [ref=e20]
+        - generic [ref=e22]:
+          - paragraph [ref=e23]: You
+          - paragraph [ref=e24]: Guest
+          - button "Edit Profile" [ref=e25] [cursor=pointer]
+      - generic [ref=e26]:
+        - button "Rename Bill" [ref=e27] [cursor=pointer]
+        - button "Add Person" [ref=e28] [cursor=pointer]
+    - generic [ref=e29]:
+      - generic [ref=e30]: Bill currency
+      - combobox [ref=e31]:
+        - option "🇺🇸 USD $" [selected]
+        - option "🇪🇺 EUR €"
+        - option "🇬🇧 GBP £"
+        - option "🇯🇵 JPY ¥"
+        - option "🇨🇦 CAD $"
+        - option "🇦🇺 AUD $"
+        - option "🇨🇭 CHF Fr"
+        - option "🇨🇳 CNY ¥"
+        - option "🇰🇷 KRW ₩"
+        - option "🇲🇽 MXN $"
+        - option "🇸🇬 SGD $"
+        - option "🇭🇰 HKD $"
+        - option "🇮🇳 INR ₹"
+        - option "🇸🇪 SEK kr"
+        - option "🇳🇴 NOK kr"
+    - generic [ref=e46]:
+      - generic [ref=e47]:
+        - img "QA Host" [ref=e49]:
+          - img [ref=e50]:
+            - generic [ref=e52]: QH
+        - generic "Present" [ref=e53]
+      - generic [ref=e54]:
+        - img "Bob Byte" [ref=e56]:
+          - img [ref=e57]:
+            - generic [ref=e59]: BB
+        - generic "Not present" [ref=e60]
+      - generic [ref=e61]:
+        - img "Alice Agent" [ref=e63]:
+          - img [ref=e64]:
+            - generic [ref=e66]: AA
+        - generic "Not present" [ref=e67]
+  - main [ref=e33]:
+    - generic [ref=e34]:
+      - generic [ref=e35]:
+        - heading "Items" [level=2] [ref=e36]
+        - generic [ref=e68]:
+          - button "Bulk" [ref=e69] [cursor=pointer]
+          - button "Add receipt" [ref=e70] [cursor=pointer]:
+            - img [ref=e71]
+            - generic [ref=e75]: Add receipt
+      - 'button "Cheeseburger + Chicken · $4.00 $13.99 Assigned: Bob Byte Assign Me Edit Copy Delete" [ref=e76] [cursor=pointer]':
+        - generic [ref=e77]:
+          - paragraph [ref=e78]: Cheeseburger
+          - generic [ref=e80]: + Chicken · $4.00
+          - paragraph [ref=e81]: $13.99
+          - generic [ref=e82]:
+            - generic [ref=e83]: "Assigned:"
+            - img "Bob Byte" [ref=e85]:
+              - img [ref=e86]:
+                - generic [ref=e88]: BB
+        - generic [ref=e89]:
+          - generic [ref=e90]:
+            - button "Assign" [ref=e91]:
+              - img [ref=e92]
+              - generic [ref=e98]: Assign
+            - button "Me" [ref=e99]:
+              - img [ref=e100]
+              - generic [ref=e101]: Me
+          - generic [ref=e102]:
+            - button "Edit" [ref=e103]:
+              - img [ref=e104]
+              - generic [ref=e106]: Edit
+            - button "Copy" [ref=e107]:
+              - img [ref=e108]
+              - generic [ref=e111]: Copy
+            - button "Delete" [ref=e112]:
+              - img [ref=e113]
+              - generic [ref=e116]: Delete
+      - 'button "Cheeseburger + Chicken · $4.00 $13.99 Assigned: Bob Byte Assign Me Edit Copy Delete" [ref=e117] [cursor=pointer]':
+        - generic [ref=e118]:
+          - paragraph [ref=e119]: Cheeseburger
+          - generic [ref=e121]: + Chicken · $4.00
+          - paragraph [ref=e122]: $13.99
+          - generic [ref=e123]:
+            - generic [ref=e124]: "Assigned:"
+            - img "Bob Byte" [ref=e126]:
+              - img [ref=e127]:
+                - generic [ref=e129]: BB
+        - generic [ref=e130]:
+          - generic [ref=e131]:
+            - button "Assign" [ref=e132]:
+              - img [ref=e133]
+              - generic [ref=e139]: Assign
+            - button "Me" [ref=e140]:
+              - img [ref=e141]
+              - generic [ref=e142]: Me
+          - generic [ref=e143]:
+            - button "Edit" [ref=e144]:
+              - img [ref=e145]
+              - generic [ref=e147]: Edit
+            - button "Copy" [ref=e148]:
+              - img [ref=e149]
+              - generic [ref=e152]: Copy
+            - button "Delete" [ref=e153]:
+              - img [ref=e154]
+              - generic [ref=e157]: Delete
+      - 'button "Coffee $6.00 Assigned: QA Host Bob Byte Alice Agent Assign Me Edit Copy Delete" [ref=e158] [cursor=pointer]':
+        - generic [ref=e159]:
+          - paragraph [ref=e160]: Coffee
+          - paragraph [ref=e161]: $6.00
+          - generic [ref=e162]:
+            - generic [ref=e163]: "Assigned:"
+            - generic [ref=e164]:
+              - img "QA Host" [ref=e165]:
+                - img [ref=e166]:
+                  - generic [ref=e168]: QH
+              - img "Bob Byte" [ref=e169]:
+                - img [ref=e170]:
+                  - generic [ref=e172]: BB
+              - img "Alice Agent" [ref=e173]:
+                - img [ref=e174]:
+                  - generic [ref=e176]: AA
+        - generic [ref=e177]:
+          - generic [ref=e178]:
+            - button "Assign" [ref=e179]:
+              - img [ref=e180]
+              - generic [ref=e186]: Assign
+            - button "Me" [ref=e187]:
+              - img [ref=e188]
+              - generic [ref=e189]: Me
+          - generic [ref=e190]:
+            - button "Edit" [ref=e191]:
+              - img [ref=e192]
+              - generic [ref=e194]: Edit
+            - button "Copy" [ref=e195]:
+              - img [ref=e196]
+              - generic [ref=e199]: Copy
+            - button "Delete" [ref=e200]:
+              - img [ref=e201]
+              - generic [ref=e204]: Delete
+  - generic [ref=e38]:
+    - button "Add Item" [ref=e39] [cursor=pointer]
+    - button "Tax/Tip" [ref=e40] [cursor=pointer]
+    - button "Adjustments" [ref=e41] [cursor=pointer]
+    - button "Summary" [ref=e42] [cursor=pointer]
+  - generic [ref=e206]:
+    - heading "Join this room" [level=3] [ref=e207]
+    - paragraph [ref=e208]: Select someone already in room 8JYSB3 or enter a new name.
+    - generic [ref=e209]:
+      - paragraph [ref=e210]: People in room
+      - generic [ref=e211]:
+        - button "Alice Agent Inactive Alice Agent Inactive" [ref=e212] [cursor=pointer]:
+          - generic [ref=e213]:
+            - generic [ref=e214]:
+              - img "Alice Agent" [ref=e215]:
+                - img [ref=e216]:
+                  - generic [ref=e218]: AA
+              - generic "Inactive" [ref=e219]
+            - generic [ref=e220]:
+              - generic [ref=e221]: Alice Agent
+              - generic [ref=e222]: Inactive
+        - button "Bob Byte Inactive Bob Byte Inactive" [ref=e223] [cursor=pointer]:
+          - generic [ref=e224]:
+            - generic [ref=e225]:
+              - img "Bob Byte" [ref=e226]:
+                - img [ref=e227]:
+                  - generic [ref=e229]: BB
+              - generic "Inactive" [ref=e230]
+            - generic [ref=e231]:
+              - generic [ref=e232]: Bob Byte
+              - generic [ref=e233]: Inactive
+        - button "QA Host Active QA Host Active now" [ref=e234] [cursor=pointer]:
+          - generic [ref=e235]:
+            - generic [ref=e236]:
+              - img "QA Host" [ref=e237]:
+                - img [ref=e238]:
+                  - generic [ref=e240]: QH
+              - generic "Active" [ref=e241]
+            - generic [ref=e242]:
+              - generic [ref=e243]: QA Host
+              - generic [ref=e244]: Active now
+    - generic [ref=e245]:
+      - text: Your name
+      - textbox "Your name" [ref=e246]
+    - generic [ref=e247]:
+      - text: Venmo username (optional)
+      - textbox "Venmo username (optional)" [ref=e248]
+    - generic [ref=e249]:
+      - button "Cancel" [ref=e250] [cursor=pointer]
+      - button "Join" [disabled] [ref=e251]

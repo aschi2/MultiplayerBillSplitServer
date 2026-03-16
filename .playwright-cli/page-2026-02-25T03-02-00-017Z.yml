@@ -1,0 +1,243 @@
+- generic [ref=e2]:
+  - generic [ref=e46]:
+    - banner [ref=e47]:
+      - generic [ref=e48]:
+        - button "Landing" [ref=e49] [cursor=pointer]:
+          - img [ref=e50]
+          - generic [ref=e52]: Landing
+        - generic [ref=e53]:
+          - paragraph [ref=e54]: Restaurant
+          - heading "PW QA Bill" [level=1] [ref=e55]
+          - generic [ref=e56]:
+            - generic [ref=e57]: "Bill: 8JYSB3"
+            - button "Expand QR code" [ref=e58] [cursor=pointer]:
+              - img "Join QR code" [ref=e59]
+        - generic [ref=e60]:
+          - img "QA Host" [ref=e61]:
+            - img [ref=e62]:
+              - generic [ref=e64]: QH
+          - generic [ref=e65]:
+            - paragraph [ref=e66]: You
+            - paragraph [ref=e67]: QA Host
+            - button "Edit Profile" [ref=e68] [cursor=pointer]
+        - generic [ref=e69]:
+          - button "Rename Bill" [ref=e70] [cursor=pointer]
+          - button "Add Person" [ref=e71] [cursor=pointer]
+      - generic [ref=e72]:
+        - generic [ref=e73]: Bill currency
+        - combobox [ref=e74]:
+          - option "🇺🇸 USD $" [selected]
+          - option "🇪🇺 EUR €"
+          - option "🇬🇧 GBP £"
+          - option "🇯🇵 JPY ¥"
+          - option "🇨🇦 CAD $"
+          - option "🇦🇺 AUD $"
+          - option "🇨🇭 CHF Fr"
+          - option "🇨🇳 CNY ¥"
+          - option "🇰🇷 KRW ₩"
+          - option "🇲🇽 MXN $"
+          - option "🇸🇬 SGD $"
+          - option "🇭🇰 HKD $"
+          - option "🇮🇳 INR ₹"
+          - option "🇸🇪 SEK kr"
+          - option "🇳🇴 NOK kr"
+      - generic [ref=e76]:
+        - generic [ref=e77]:
+          - img "QA Host" [ref=e79]:
+            - img [ref=e80]:
+              - generic [ref=e82]: QH
+          - generic "Present" [ref=e83]
+        - generic [ref=e152]:
+          - img "Bob Byte" [ref=e211]:
+            - img [ref=e155]:
+              - generic [ref=e157]: BB
+          - generic "Not present" [ref=e158]
+        - generic [ref=e160]:
+          - img "Alice Agent" [ref=e212]:
+            - img [ref=e163]:
+              - generic [ref=e165]: AA
+          - generic "Not present" [ref=e166]
+    - main [ref=e84]:
+      - generic [ref=e85]:
+        - generic [ref=e86]:
+          - heading "Items" [level=2] [ref=e87]
+          - generic [ref=e88]:
+            - button "Bulk" [ref=e435] [cursor=pointer]
+            - button "Add receipt" [ref=e236] [cursor=pointer]:
+              - img [ref=e91]
+              - generic [ref=e95]: Add receipt
+        - 'button "Cheeseburger + Chicken · $4.00 $13.99 Assigned: Bob Byte Assign Me Edit Copy Delete" [ref=e436] [cursor=pointer]':
+          - generic [ref=e238]:
+            - paragraph [ref=e239]: Cheeseburger
+            - generic [ref=e241]: + Chicken · $4.00
+            - paragraph [ref=e242]: $13.99
+            - generic [ref=e243]:
+              - generic [ref=e244]: "Assigned:"
+              - img "Bob Byte" [ref=e410]:
+                - img [ref=e411]:
+                  - generic [ref=e413]: BB
+          - generic [ref=e245]:
+            - generic [ref=e437]:
+              - button "Assign" [ref=e438]:
+                - img [ref=e439]
+                - generic [ref=e445]: Assign
+              - button "Me" [ref=e446]:
+                - img [ref=e447]
+                - generic [ref=e448]: Me
+            - generic [ref=e449]:
+              - button "Edit" [ref=e450]:
+                - img [ref=e451]
+                - generic [ref=e453]: Edit
+              - button "Copy" [ref=e454]:
+                - img [ref=e455]
+                - generic [ref=e458]: Copy
+              - button "Delete" [ref=e459]:
+                - img [ref=e460]
+                - generic [ref=e463]: Delete
+        - 'button "Cheeseburger + Chicken · $4.00 $13.99 Assigned: Bob Byte Assign Me Edit Copy Delete" [ref=e464] [cursor=pointer]':
+          - generic [ref=e274]:
+            - paragraph [ref=e275]: Cheeseburger
+            - generic [ref=e277]: + Chicken · $4.00
+            - paragraph [ref=e278]: $13.99
+            - generic [ref=e279]:
+              - generic [ref=e280]: "Assigned:"
+              - img "Bob Byte" [ref=e416]:
+                - img [ref=e417]:
+                  - generic [ref=e419]: BB
+          - generic [ref=e281]:
+            - generic [ref=e465]:
+              - button "Assign" [ref=e466]:
+                - img [ref=e467]
+                - generic [ref=e473]: Assign
+              - button "Me" [ref=e474]:
+                - img [ref=e475]
+                - generic [ref=e476]: Me
+            - generic [ref=e477]:
+              - button "Edit" [ref=e478]:
+                - img [ref=e479]
+                - generic [ref=e481]: Edit
+              - button "Copy" [ref=e482]:
+                - img [ref=e483]
+                - generic [ref=e486]: Copy
+              - button "Delete" [ref=e487]:
+                - img [ref=e488]
+                - generic [ref=e491]: Delete
+        - 'button "Coffee $6.00 Assigned: QA Host Bob Byte Alice Agent Assign Unassign Edit Copy Delete" [ref=e492] [cursor=pointer]':
+          - generic [ref=e353]:
+            - paragraph [ref=e354]: Coffee
+            - paragraph [ref=e355]: $6.00
+            - generic [ref=e356]:
+              - generic [ref=e357]: "Assigned:"
+              - generic [ref=e422]:
+                - img "QA Host" [ref=e423]:
+                  - img [ref=e424]:
+                    - generic [ref=e426]: QH
+                - img "Bob Byte" [ref=e427]:
+                  - img [ref=e428]:
+                    - generic [ref=e430]: BB
+                - img "Alice Agent" [ref=e431]:
+                  - img [ref=e432]:
+                    - generic [ref=e434]: AA
+          - generic [ref=e358]:
+            - generic [ref=e493]:
+              - button "Assign" [ref=e494]:
+                - img [ref=e495]
+                - generic [ref=e501]: Assign
+              - button "Unassign" [ref=e502]:
+                - img [ref=e503]
+                - generic [ref=e504]: Unassign
+            - generic [ref=e505]:
+              - button "Edit" [ref=e506]:
+                - img [ref=e507]
+                - generic [ref=e509]: Edit
+              - button "Copy" [ref=e510]:
+                - img [ref=e511]
+                - generic [ref=e514]: Copy
+              - button "Delete" [ref=e515]:
+                - img [ref=e516]
+                - generic [ref=e519]: Delete
+    - generic [ref=e97]:
+      - button "Add Item" [ref=e98] [cursor=pointer]
+      - button "Tax/Tip" [ref=e99] [cursor=pointer]
+      - button "Adjustments" [ref=e100] [cursor=pointer]
+      - button "Summary" [ref=e101] [cursor=pointer]
+    - generic [ref=e521]:
+      - generic [ref=e522]:
+        - heading "Summary" [level=3] [ref=e523]
+        - generic [ref=e524]:
+          - generic [ref=e525]: "Summary in:"
+          - combobox [ref=e526]:
+            - option "🇺🇸 USD $" [selected]
+            - option "🇪🇺 EUR €"
+            - option "🇬🇧 GBP £"
+            - option "🇯🇵 JPY ¥"
+            - option "🇨🇦 CAD $"
+            - option "🇦🇺 AUD $"
+            - option "🇨🇭 CHF Fr"
+            - option "🇨🇳 CNY ¥"
+            - option "🇰🇷 KRW ₩"
+            - option "🇲🇽 MXN $"
+            - option "🇸🇬 SGD $"
+            - option "🇭🇰 HKD $"
+            - option "🇮🇳 INR ₹"
+            - option "🇸🇪 SEK kr"
+            - option "🇳🇴 NOK kr"
+      - generic [ref=e527]:
+        - generic [ref=e528]: Showing USD
+        - button "Unsent only" [active] [ref=e637] [cursor=pointer]
+      - generic [ref=e530]:
+        - generic [ref=e531]:
+          - generic [ref=e532]:
+            - paragraph [ref=e535]: Bob Byte
+            - generic [ref=e536]:
+              - button "Mark sent" [ref=e537] [cursor=pointer]
+              - link "V Charge with Venmo" [ref=e538] [cursor=pointer]:
+                - /url: https://venmo.com/?txn=charge&recipients=bobbyte&amount=29.98&note=PW%20QA%20Bill%202026-02-24
+                - generic [ref=e539]: V
+                - generic [ref=e540]: Charge with Venmo
+          - generic [ref=e541]:
+            - paragraph [ref=e542]: Item share
+            - generic [ref=e543]:
+              - generic [ref=e544]: Cheeseburger
+              - generic [ref=e546]: $13.99
+            - generic [ref=e547]:
+              - generic [ref=e548]: Cheeseburger
+              - generic [ref=e550]: $13.99
+            - generic [ref=e551]:
+              - generic [ref=e552]: 1/3 Coffee
+              - generic [ref=e554]: $2.00
+            - generic [ref=e555]:
+              - generic [ref=e556]: Item share total
+              - generic [ref=e558]: $29.98
+            - generic [ref=e560]:
+              - generic [ref=e561]: Tax share
+              - generic [ref=e563]: $0.00
+            - generic [ref=e564]:
+              - generic [ref=e565]: Tip share
+              - generic [ref=e567]: $0.00
+          - generic [ref=e569]:
+            - generic [ref=e570]: Total
+            - generic [ref=e571]: $29.98
+        - generic [ref=e572]:
+          - paragraph [ref=e576]: QA Host
+          - generic [ref=e577]:
+            - paragraph [ref=e578]: Item share
+            - generic [ref=e579]:
+              - generic [ref=e580]: 1/3 Coffee
+              - generic [ref=e582]: $2.00
+            - generic [ref=e583]:
+              - generic [ref=e584]: Item share total
+              - generic [ref=e586]: $2.00
+            - generic [ref=e588]:
+              - generic [ref=e589]: Tax share
+              - generic [ref=e591]: $0.00
+            - generic [ref=e592]:
+              - generic [ref=e593]: Tip share
+              - generic [ref=e595]: $0.00
+          - generic [ref=e597]:
+            - generic [ref=e598]: Total
+            - generic [ref=e599]: $2.00
+      - generic [ref=e633]:
+        - button "Export PDF" [ref=e634] [cursor=pointer]
+        - button "Close" [ref=e635] [cursor=pointer]
+  - generic [ref=e32]: untitled page

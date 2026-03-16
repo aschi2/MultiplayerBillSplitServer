@@ -1,0 +1,114 @@
+- generic [ref=e2]:
+  - generic [ref=e46]:
+    - banner [ref=e47]:
+      - generic [ref=e48]:
+        - button "Landing" [ref=e49] [cursor=pointer]:
+          - img [ref=e50]
+          - generic [ref=e52]: Landing
+        - generic [ref=e53]:
+          - paragraph [ref=e54]: Restaurant
+          - heading "PW QA Bill" [level=1] [ref=e55]
+          - generic [ref=e56]:
+            - generic [ref=e57]: "Bill: 8JYSB3"
+            - button "Expand QR code" [ref=e58] [cursor=pointer]:
+              - img "Join QR code" [ref=e59]
+        - generic [ref=e60]:
+          - img "QA Host" [ref=e61]:
+            - img [ref=e62]:
+              - generic [ref=e64]: QH
+          - generic [ref=e65]:
+            - paragraph [ref=e66]: You
+            - paragraph [ref=e67]: QA Host
+            - button "Edit Profile" [ref=e68] [cursor=pointer]
+        - generic [ref=e69]:
+          - button "Rename Bill" [ref=e70] [cursor=pointer]
+          - button "Add Person" [ref=e71] [cursor=pointer]
+      - generic [ref=e72]:
+        - generic [ref=e73]: Bill currency
+        - combobox [ref=e74]:
+          - option "🇺🇸 USD $" [selected]
+          - option "🇪🇺 EUR €"
+          - option "🇬🇧 GBP £"
+          - option "🇯🇵 JPY ¥"
+          - option "🇨🇦 CAD $"
+          - option "🇦🇺 AUD $"
+          - option "🇨🇭 CHF Fr"
+          - option "🇨🇳 CNY ¥"
+          - option "🇰🇷 KRW ₩"
+          - option "🇲🇽 MXN $"
+          - option "🇸🇬 SGD $"
+          - option "🇭🇰 HKD $"
+          - option "🇮🇳 INR ₹"
+          - option "🇸🇪 SEK kr"
+          - option "🇳🇴 NOK kr"
+      - generic [ref=e76]:
+        - generic [ref=e77]:
+          - img "QA Host" [ref=e79]:
+            - img [ref=e80]:
+              - generic [ref=e82]: QH
+          - generic "Present" [ref=e83]
+        - generic [ref=e152]:
+          - img "Bob Byte" [ref=e211]:
+            - img [ref=e155]:
+              - generic [ref=e157]: BB
+          - generic "Not present" [ref=e158]
+          - button "Remove" [ref=e159] [cursor=pointer]
+        - generic [ref=e160]:
+          - img "Alice Agent" [ref=e212]:
+            - img [ref=e163]:
+              - generic [ref=e165]: AA
+          - generic "Not present" [ref=e166]
+          - button "Remove" [ref=e167] [cursor=pointer]
+    - main [ref=e84]:
+      - generic [ref=e85]:
+        - generic [ref=e86]:
+          - heading "Items" [level=2] [ref=e87]
+          - generic [ref=e88]:
+            - button "Done" [ref=e386] [cursor=pointer]
+            - button "Add receipt" [ref=e236] [cursor=pointer]:
+              - img [ref=e91]
+              - generic [ref=e95]: Add receipt
+        - generic [ref=e387]:
+          - generic [ref=e388]:
+            - paragraph [ref=e389]: Bulk assign mode · 2 selected
+            - button "Clear selected" [ref=e390] [cursor=pointer]
+          - generic [ref=e391]:
+            - text: Assign selected to
+            - combobox "Assign selected to" [ref=e392]:
+              - option "Select person" [disabled]
+              - option "QA Host"
+              - option "Bob Byte" [selected]
+              - option "Alice Agent"
+          - generic [ref=e393]:
+            - button "Split selected evenly" [ref=e394] [cursor=pointer]
+            - button "Assign selected" [ref=e395] [cursor=pointer]
+            - button "Clear assignments" [ref=e396] [cursor=pointer]
+        - 'button "Cheeseburger Selected for bulk action + Chicken · $4.00 $13.99 Assigned: Selected" [ref=e406] [cursor=pointer]':
+          - generic [ref=e238]:
+            - paragraph [ref=e239]: Cheeseburger
+            - paragraph [ref=e398]: Selected for bulk action
+            - generic [ref=e241]: + Chicken · $4.00
+            - paragraph [ref=e242]: $13.99
+            - generic [ref=e244]: "Assigned:"
+          - generic [ref=e399]: Selected
+        - 'button "Cheeseburger Selected for bulk action + Chicken · $4.00 $13.99 Assigned: Selected" [active] [ref=e407] [cursor=pointer]':
+          - generic [ref=e274]:
+            - paragraph [ref=e275]: Cheeseburger
+            - paragraph [ref=e401]: Selected for bulk action
+            - generic [ref=e277]: + Chicken · $4.00
+            - paragraph [ref=e278]: $13.99
+            - generic [ref=e280]: "Assigned:"
+          - generic [ref=e402]: Selected
+        - 'button "Coffee Tap to select $6.00 Assigned: Select" [ref=e403] [cursor=pointer]':
+          - generic [ref=e353]:
+            - paragraph [ref=e354]: Coffee
+            - paragraph [ref=e404]: Tap to select
+            - paragraph [ref=e355]: $6.00
+            - generic [ref=e357]: "Assigned:"
+          - generic [ref=e405]: Select
+    - generic [ref=e97]:
+      - button "Add Item" [ref=e98] [cursor=pointer]
+      - button "Tax/Tip" [ref=e99] [cursor=pointer]
+      - button "Adjustments" [ref=e100] [cursor=pointer]
+      - button "Summary" [ref=e101] [cursor=pointer]
+  - generic [ref=e32]: untitled page

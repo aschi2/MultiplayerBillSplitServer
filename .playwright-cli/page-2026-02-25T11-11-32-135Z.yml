@@ -1,0 +1,83 @@
+- generic [ref=e3]:
+  - banner [ref=e7]:
+    - generic [ref=e8]:
+      - button "Landing" [ref=e9] [cursor=pointer]:
+        - img [ref=e10]
+        - generic [ref=e12]: Landing
+      - generic [ref=e13]:
+        - paragraph [ref=e14]: Restaurant
+        - heading "Freeze Debug Bill" [level=1] [ref=e43]
+        - generic [ref=e16]:
+          - 'button "Bill Code: QWATGV" [ref=e17] [cursor=pointer]'
+          - button "Expand QR code" [ref=e44] [cursor=pointer]:
+            - img "Join QR code" [ref=e45]
+      - generic [ref=e18]:
+        - img [ref=e19]:
+          - img [ref=e20]
+        - generic [ref=e22]:
+          - paragraph [ref=e23]: You
+          - paragraph [ref=e24]: Guest
+          - button "Edit Profile" [ref=e25] [cursor=pointer]
+      - generic [ref=e26]:
+        - button "Rename Bill" [ref=e27] [cursor=pointer]
+        - button "Add Person" [ref=e28] [cursor=pointer]
+    - generic [ref=e29]:
+      - generic [ref=e30]: Bill currency
+      - combobox [ref=e31]:
+        - option "🇺🇸 USD $" [selected]
+        - option "🇪🇺 EUR €"
+        - option "🇬🇧 GBP £"
+        - option "🇯🇵 JPY ¥"
+        - option "🇨🇦 CAD $"
+        - option "🇦🇺 AUD $"
+        - option "🇨🇭 CHF Fr"
+        - option "🇨🇳 CNY ¥"
+        - option "🇰🇷 KRW ₩"
+        - option "🇲🇽 MXN $"
+        - option "🇸🇬 SGD $"
+        - option "🇭🇰 HKD $"
+        - option "🇮🇳 INR ₹"
+        - option "🇸🇪 SEK kr"
+        - option "🇳🇴 NOK kr"
+    - generic [ref=e47]:
+      - img "Playwright Tester" [ref=e49]:
+        - img [ref=e50]:
+          - generic [ref=e52]: PT
+      - generic "Present" [ref=e53]
+  - main [ref=e33]:
+    - generic [ref=e35]:
+      - heading "Items" [level=2] [ref=e36]
+      - generic [ref=e54]:
+        - button "Bulk" [ref=e55] [cursor=pointer]
+        - button "Upload receipt" [ref=e56] [cursor=pointer]:
+          - img [ref=e57]
+          - generic [ref=e61]: Upload receipt
+  - generic [ref=e38]:
+    - button "Add Item" [ref=e39] [cursor=pointer]
+    - button "Tax/Tip" [ref=e40] [cursor=pointer]
+    - button "Adjustments" [ref=e41] [cursor=pointer]
+    - button "Summary" [ref=e42] [cursor=pointer]
+  - generic [ref=e63]:
+    - heading "Join this room" [level=3] [ref=e64]
+    - paragraph [ref=e65]: Select someone already in room QWATGV or enter a new name.
+    - generic [ref=e66]:
+      - paragraph [ref=e67]: People in room
+      - button "Playwright Tester Active Playwright Tester Active now" [ref=e69] [cursor=pointer]:
+        - generic [ref=e70]:
+          - generic [ref=e71]:
+            - img "Playwright Tester" [ref=e72]:
+              - img [ref=e73]:
+                - generic [ref=e75]: PT
+            - generic "Active" [ref=e76]
+          - generic [ref=e77]:
+            - generic [ref=e78]: Playwright Tester
+            - generic [ref=e79]: Active now
+    - generic [ref=e80]:
+      - text: Your name
+      - textbox "Your name" [ref=e81]
+    - generic [ref=e82]:
+      - text: Venmo username (optional)
+      - textbox "Venmo username (optional)" [ref=e83]
+    - generic [ref=e84]:
+      - button "Cancel" [ref=e85] [cursor=pointer]
+      - button "Join" [disabled] [ref=e86]

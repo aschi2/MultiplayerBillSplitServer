@@ -1,0 +1,48 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]: Connecting…
+    - button "Retry" [ref=e6] [cursor=pointer]
+  - banner [ref=e7]:
+    - generic [ref=e8]:
+      - button "Landing" [ref=e9] [cursor=pointer]:
+        - img [ref=e10]
+        - generic [ref=e12]: Landing
+      - generic [ref=e13]:
+        - paragraph [ref=e14]: Restaurant
+        - heading "Shared Bill" [level=1] [ref=e15]
+        - generic [ref=e17]: "Bill: 8JYSB3"
+      - generic [ref=e18]:
+        - img [ref=e19]:
+          - img [ref=e20]
+        - generic [ref=e22]:
+          - paragraph [ref=e23]: You
+          - paragraph [ref=e24]: Guest
+          - button "Edit Profile" [ref=e25] [cursor=pointer]
+      - generic [ref=e26]:
+        - button "Rename Bill" [ref=e27] [cursor=pointer]
+        - button "Add Person" [ref=e28] [cursor=pointer]
+    - generic [ref=e29]:
+      - generic [ref=e30]: Bill currency
+      - combobox [ref=e31]:
+        - option "🇺🇸 USD $" [selected]
+        - option "🇪🇺 EUR €"
+        - option "🇬🇧 GBP £"
+        - option "🇯🇵 JPY ¥"
+        - option "🇨🇦 CAD $"
+        - option "🇦🇺 AUD $"
+        - option "🇨🇭 CHF Fr"
+        - option "🇨🇳 CNY ¥"
+        - option "🇰🇷 KRW ₩"
+        - option "🇲🇽 MXN $"
+        - option "🇸🇬 SGD $"
+        - option "🇭🇰 HKD $"
+        - option "🇮🇳 INR ₹"
+        - option "🇸🇪 SEK kr"
+        - option "🇳🇴 NOK kr"
+  - main [ref=e33]:
+    - heading "Items" [level=2] [ref=e36]
+  - generic [ref=e38]:
+    - button "Add Item" [ref=e39] [cursor=pointer]
+    - button "Tax/Tip" [ref=e40] [cursor=pointer]
+    - button "Adjustments" [ref=e41] [cursor=pointer]
+    - button "Summary" [ref=e42] [cursor=pointer]

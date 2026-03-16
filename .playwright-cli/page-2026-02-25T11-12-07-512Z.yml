@@ -1,0 +1,97 @@
+- generic [ref=e3]:
+  - banner [ref=e7]:
+    - generic [ref=e8]:
+      - button "Landing" [ref=e9] [cursor=pointer]:
+        - img [ref=e10]
+        - generic [ref=e12]: Landing
+      - generic [ref=e13]:
+        - paragraph [ref=e14]: Restaurant
+        - heading "Freeze Debug Bill" [level=1] [ref=e43]
+        - generic [ref=e16]:
+          - 'button "Bill Code: QWATGV" [ref=e17] [cursor=pointer]'
+          - button "Expand QR code" [ref=e44] [cursor=pointer]:
+            - img "Join QR code" [ref=e45]
+      - generic [ref=e18]:
+        - img "Playwright Tester" [ref=e88]:
+          - img [ref=e20]:
+            - generic [ref=e89]: PT
+        - generic [ref=e22]:
+          - paragraph [ref=e23]: You
+          - paragraph [ref=e24]: Playwright Tester
+          - button "Edit Profile" [ref=e25] [cursor=pointer]
+      - generic [ref=e26]:
+        - button "Rename Bill" [ref=e27] [cursor=pointer]
+        - button "Add Person" [ref=e28] [cursor=pointer]
+    - generic [ref=e29]:
+      - generic [ref=e30]: Bill currency
+      - combobox [ref=e31]:
+        - option "🇺🇸 USD $" [selected]
+        - option "🇪🇺 EUR €"
+        - option "🇬🇧 GBP £"
+        - option "🇯🇵 JPY ¥"
+        - option "🇨🇦 CAD $"
+        - option "🇦🇺 AUD $"
+        - option "🇨🇭 CHF Fr"
+        - option "🇨🇳 CNY ¥"
+        - option "🇰🇷 KRW ₩"
+        - option "🇲🇽 MXN $"
+        - option "🇸🇬 SGD $"
+        - option "🇭🇰 HKD $"
+        - option "🇮🇳 INR ₹"
+        - option "🇸🇪 SEK kr"
+        - option "🇳🇴 NOK kr"
+    - generic [ref=e47]:
+      - img "Playwright Tester" [ref=e49]:
+        - img [ref=e50]:
+          - generic [ref=e52]: PT
+      - generic "Present" [ref=e53]
+  - main [ref=e33]:
+    - generic [ref=e35]:
+      - heading "Items" [level=2] [ref=e36]
+      - generic [ref=e54]:
+        - button "Bulk" [ref=e55] [cursor=pointer]
+        - button "Upload receipt" [ref=e56] [cursor=pointer]:
+          - img [ref=e57]
+          - generic [ref=e61]: Upload receipt
+  - generic [ref=e38]:
+    - button "Add Item" [ref=e39] [cursor=pointer]
+    - button "Tax/Tip" [ref=e40] [cursor=pointer]
+    - button "Adjustments" [ref=e41] [cursor=pointer]
+    - button "Summary" [active] [ref=e42] [cursor=pointer]
+  - generic [ref=e91]:
+    - generic [ref=e92]:
+      - heading "Summary" [level=3] [ref=e93]
+      - generic [ref=e94]:
+        - generic [ref=e95]: "Summary in:"
+        - combobox [ref=e96]:
+          - option "🇺🇸 USD $" [selected]
+          - option "🇪🇺 EUR €"
+          - option "🇬🇧 GBP £"
+          - option "🇯🇵 JPY ¥"
+          - option "🇨🇦 CAD $"
+          - option "🇦🇺 AUD $"
+          - option "🇨🇭 CHF Fr"
+          - option "🇨🇳 CNY ¥"
+          - option "🇰🇷 KRW ₩"
+          - option "🇲🇽 MXN $"
+          - option "🇸🇬 SGD $"
+          - option "🇭🇰 HKD $"
+          - option "🇮🇳 INR ₹"
+          - option "🇸🇪 SEK kr"
+          - option "🇳🇴 NOK kr"
+    - generic [ref=e97]:
+      - generic [ref=e98]: Showing USD
+      - generic [ref=e99]:
+        - button "Show all" [ref=e100] [cursor=pointer]
+        - button "Charge all unsent (0)" [disabled] [ref=e101]
+    - generic [ref=e102]:
+      - generic [ref=e103]:
+        - generic [ref=e104]: Bill subtotal
+        - generic [ref=e106]: $0.00
+      - generic [ref=e108]:
+        - generic [ref=e109]: Bill total
+        - generic [ref=e111]: $0.00
+    - generic [ref=e113]: No matching people for this filter.
+    - generic [ref=e114]:
+      - button "Export PDF" [ref=e115] [cursor=pointer]
+      - button "Close" [ref=e116] [cursor=pointer]

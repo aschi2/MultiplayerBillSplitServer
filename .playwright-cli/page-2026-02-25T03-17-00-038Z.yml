@@ -1,0 +1,22 @@
+- generic [ref=e2]:
+  - generic [ref=e254]:
+    - banner [ref=e255]:
+      - img "Divvi" [ref=e257]
+      - paragraph [ref=e258]: Split receipts in real time with your group. Built for mobile, fast to use at the table.
+    - main [ref=e259]:
+      - button "Create new bill Start a room and share the code with friends. Create Bill" [ref=e260] [cursor=pointer]:
+        - generic [ref=e262]:
+          - paragraph [ref=e263]: Create new bill
+          - paragraph [ref=e264]: Start a room and share the code with friends.
+        - generic [ref=e266]: Create Bill
+      - button "Join existing bill Enter a code and start assigning items. Join Bill" [ref=e267] [cursor=pointer]:
+        - generic [ref=e269]:
+          - paragraph [ref=e270]: Join existing bill
+          - paragraph [ref=e271]: Enter a code and start assigning items.
+        - generic [ref=e273]: Join Bill
+    - generic [ref=e274]:
+      - generic [ref=e275]:
+        - paragraph [ref=e278]: Your bills
+        - generic "0 saved bills" [ref=e279]: "0"
+      - paragraph [ref=e281]: No recent bills yet on this device.
+  - generic [ref=e252]: untitled page

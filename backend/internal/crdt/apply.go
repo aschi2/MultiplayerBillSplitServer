@@ -24,8 +24,10 @@ type AssignPayload struct {
 }
 
 type TaxTipPayload struct {
-	TaxCents int `json:"tax_cents"`
-	TipCents int `json:"tip_cents"`
+	TaxCents          *int `json:"tax_cents,omitempty"`
+	TipCents          *int `json:"tip_cents,omitempty"`
+	BillDiscountCents *int `json:"bill_discount_cents,omitempty"`
+	BillChargesCents  *int `json:"bill_charges_cents,omitempty"`
 }
 
 type RoomPayload struct {
@@ -72,6 +74,9 @@ func ApplyOp(doc *RoomDoc, op Op) {
 		if existing, ok := doc.Items[item.ID]; ok {
 			if existing.UpdatedAt > op.Timestamp {
 				return
+			}
+			if item.SortOrder == nil && existing.SortOrder != nil {
+				item.SortOrder = existing.SortOrder
 			}
 		}
 		if doc.Tombstones[item.ID] > op.Timestamp {
@@ -137,8 +142,18 @@ func ApplyOp(doc *RoomDoc, op Op) {
 		if json.Unmarshal(op.Payload, &payload) != nil {
 			return
 		}
-		doc.TaxCents = payload.TaxCents
-		doc.TipCents = payload.TipCents
+		if payload.TaxCents != nil {
+			doc.TaxCents = *payload.TaxCents
+		}
+		if payload.TipCents != nil {
+			doc.TipCents = *payload.TipCents
+		}
+		if payload.BillDiscountCents != nil {
+			doc.BillDiscountCents = *payload.BillDiscountCents
+		}
+		if payload.BillChargesCents != nil {
+			doc.BillChargesCents = *payload.BillChargesCents
+		}
 		doc.UpdatedAt = op.Timestamp
 	case "set_room_name":
 		var payload RoomPayload

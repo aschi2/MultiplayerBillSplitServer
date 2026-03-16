@@ -1,0 +1,62 @@
+- generic [ref=e2]:
+  - generic [ref=e46]:
+    - banner [ref=e47]:
+      - generic [ref=e48]:
+        - button "Landing" [ref=e49] [cursor=pointer]:
+          - img [ref=e50]
+          - generic [ref=e52]: Landing
+        - generic [ref=e53]:
+          - paragraph [ref=e54]: Restaurant
+          - heading "Freeze Debug Bill" [level=1] [ref=e55]
+          - generic [ref=e56]:
+            - 'button "Bill Code: QWATGV" [ref=e57] [cursor=pointer]'
+            - button "Expand QR code" [ref=e58] [cursor=pointer]:
+              - img "Join QR code" [ref=e59]
+        - generic [ref=e60]:
+          - img "Playwright Tester" [ref=e61]:
+            - img [ref=e62]:
+              - generic [ref=e64]: PT
+          - generic [ref=e65]:
+            - paragraph [ref=e66]: You
+            - paragraph [ref=e67]: Playwright Tester
+            - button "Edit Profile" [ref=e68] [cursor=pointer]
+        - generic [ref=e69]:
+          - button "Rename Bill" [ref=e70] [cursor=pointer]
+          - button "Add Person" [ref=e71] [cursor=pointer]
+      - generic [ref=e72]:
+        - generic [ref=e73]: Bill currency
+        - combobox [ref=e74]:
+          - option "🇺🇸 USD $" [selected]
+          - option "🇪🇺 EUR €"
+          - option "🇬🇧 GBP £"
+          - option "🇯🇵 JPY ¥"
+          - option "🇨🇦 CAD $"
+          - option "🇦🇺 AUD $"
+          - option "🇨🇭 CHF Fr"
+          - option "🇨🇳 CNY ¥"
+          - option "🇰🇷 KRW ₩"
+          - option "🇲🇽 MXN $"
+          - option "🇸🇬 SGD $"
+          - option "🇭🇰 HKD $"
+          - option "🇮🇳 INR ₹"
+          - option "🇸🇪 SEK kr"
+          - option "🇳🇴 NOK kr"
+      - generic [ref=e77]:
+        - img "Playwright Tester" [ref=e79]:
+          - img [ref=e80]:
+            - generic [ref=e82]: PT
+        - generic "Present" [ref=e83]
+    - main [ref=e84]:
+      - generic [ref=e86]:
+        - heading "Items" [level=2] [ref=e87]
+        - generic [ref=e88]:
+          - button "Bulk" [ref=e89] [cursor=pointer]
+          - button "Upload receipt" [ref=e90] [cursor=pointer]:
+            - img [ref=e91]
+            - generic [ref=e95]: Upload receipt
+    - generic [ref=e97]:
+      - button "Add Item" [ref=e98] [cursor=pointer]
+      - button "Tax/Tip" [ref=e99] [cursor=pointer]
+      - button "Adjustments" [ref=e100] [cursor=pointer]
+      - button "Summary" [active] [ref=e101] [cursor=pointer]
+  - generic [ref=e32]: untitled page
