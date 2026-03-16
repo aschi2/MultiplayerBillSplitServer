@@ -138,8 +138,7 @@
     grossTotal: 0
   };
   let itemFormNetPreview = { netUnit: 0, netTotal: 0 };
-  let showTaxTipModal = false;
-  let showBillAdjustmentsModal = false;
+  let showBillSettingsModal = false;
   let taxInput = '';
   let tipInput = '';
   let billDiscountInput = '';
@@ -163,6 +162,7 @@
     billCharges: number;
     tax: number;
     tip: number;
+    totalBeforeTip: number;
     total: number;
     converted?: {
       gross: number;
@@ -173,6 +173,7 @@
       billCharges: number;
       tax: number;
       tip: number;
+      totalBeforeTip: number;
       total: number;
       perPerson: { id: string; total: number }[];
       rate: number;
@@ -237,11 +238,10 @@
   let tipCentsPreview = 0;
   let billDiscountCentsPreview = 0;
   let billChargesCentsPreview = 0;
-  let billAdjustmentsDirty = false;
-  let billAdjustmentsInitialized = false;
+  let billSettingsDirty = false;
+  let billSettingsInitialized = false;
   let taxPercent = 0;
   let tipPercent = 0;
-  let taxTipDirty = false;
   let billDiscountPercent = 0;
   let billChargesPercent = 0;
   let wsStatus: 'connecting' | 'connected' | 'reconnecting' | 'disconnected' = 'connecting';
@@ -1176,7 +1176,8 @@
     bulkSelectedItemIds.forEach((itemId) => {
       const item = room?.items?.[itemId];
       if (!item) return;
-      replaceItemAssignments(item, { [bulkAssignTargetParticipantId]: true });
+      const merged = { ...(item.assigned || {}), [bulkAssignTargetParticipantId]: true };
+      replaceItemAssignments(item, merged);
     });
     bulkAssignSelectedByItemId = {};
   };
@@ -2363,8 +2364,9 @@
       };
     });
 
-    const total = net + billCharges + tax + tip;
-    return { gross, itemDiscount, billDiscount, discount, net, billCharges, tax, tip, total, perPerson: detailed };
+    const totalBeforeTip = net + billCharges + tax;
+    const total = totalBeforeTip + tip;
+    return { gross, itemDiscount, billDiscount, discount, net, billCharges, tax, tip, totalBeforeTip, total, perPerson: detailed };
   };
 
   const buildSummary = async () => {
@@ -2409,6 +2411,7 @@
         billCharges: convertMinor(base.billCharges),
         tax: convertMinor(base.tax),
         tip: convertMinor(base.tip),
+        totalBeforeTip: convertMinor(base.totalBeforeTip),
         total: convertMinor(base.total),
         perPerson: base.perPerson.map((p) => ({
           id: p.id,
@@ -3618,7 +3621,7 @@ $: if (!summaryData) {
         })
       );
       applyLocalOp({ kind: 'set_tax_tip', payload, timestamp: Date.now() });
-      syncBillAdjustmentInputsFromRoom();
+      syncBillSettingsInputsFromRoom();
     }
     receiptResult = null;
     editableItems = [];
@@ -4237,8 +4240,7 @@ $: if (!summaryData) {
     showReceiptAttachModal ||
     showItemModal ||
     showItemAddonsModal ||
-    showBillAdjustmentsModal ||
-    showTaxTipModal ||
+    showBillSettingsModal ||
     showSummary ||
     showNameModal ||
     showRoomNameModal ||
@@ -4286,6 +4288,10 @@ $: if (!summaryData) {
     receiptCurrencySelection && roomCurrency && receiptCurrencySelection !== roomCurrency
       ? NaN
       : Math.max(0, baselineBillTotalCents + receiptImportedTotalCents);
+  $: projectedBillTotalBeforeTipCents =
+    receiptCurrencySelection && roomCurrency && receiptCurrencySelection !== roomCurrency
+      ? NaN
+      : Math.max(0, projectedBillTotalAfterImportCents - projectedTipCents);
   $: receiptTaxPercent =
     receiptSubtotalCents > 0 ? (parsedTaxCents / receiptSubtotalCents) * 100 : 0;
   $: receiptTipPercent =
@@ -4357,34 +4363,28 @@ $: if (!summaryData) {
     preTaxGrossSubtotalCents > 0 ? (billDiscountCentsPreview / preTaxGrossSubtotalCents) * 100 : 0;
   $: billChargesPercent =
     preTaxGrossSubtotalCents > 0 ? (billChargesCentsPreview / preTaxGrossSubtotalCents) * 100 : 0;
-  $: taxTipDirty =
+  $: billSettingsDirty =
     !numericInputToString(taxInput) ||
     !numericInputToString(tipInput) ||
-    taxCentsPreview !== Math.max(0, room?.tax_cents || 0) ||
-    tipCentsPreview !== Math.max(0, room?.tip_cents || 0);
-  $: billAdjustmentsDirty =
     !numericInputToString(billDiscountInput) ||
     !numericInputToString(billChargesInput) ||
+    taxCentsPreview !== Math.max(0, room?.tax_cents || 0) ||
+    tipCentsPreview !== Math.max(0, room?.tip_cents || 0) ||
     billDiscountCentsPreview !== Math.max(0, room?.bill_discount_cents || 0) ||
     billChargesCentsPreview !== Math.max(0, room?.bill_charges_cents || 0);
 
-  const syncBillAdjustmentInputsFromRoom = () => {
-    const exp = exponentFor(roomCurrency);
-    const factor = factorFor(roomCurrency);
-    billDiscountInput = ((room?.bill_discount_cents || 0) / factor).toFixed(exp);
-    billChargesInput = ((room?.bill_charges_cents || 0) / factor).toFixed(exp);
-  };
-
-  const syncTaxTipInputsFromRoom = () => {
+  const syncBillSettingsInputsFromRoom = () => {
     const exp = exponentFor(roomCurrency);
     const factor = factorFor(roomCurrency);
     taxInput = ((room?.tax_cents || 0) / factor).toFixed(exp);
     tipInput = ((room?.tip_cents || 0) / factor).toFixed(exp);
+    billDiscountInput = ((room?.bill_discount_cents || 0) / factor).toFixed(exp);
+    billChargesInput = ((room?.bill_charges_cents || 0) / factor).toFixed(exp);
   };
 
-  $: if (room && !billAdjustmentsInitialized) {
-    syncBillAdjustmentInputsFromRoom();
-    billAdjustmentsInitialized = true;
+  $: if (room && !billSettingsInitialized) {
+    syncBillSettingsInputsFromRoom();
+    billSettingsInitialized = true;
   }
 
   const setTipPercent = (pct: number) => {
@@ -4397,35 +4397,23 @@ $: if (!summaryData) {
     tipPercent = base > 0 ? (tip / base) * 100 : 0;
   };
 
-  const saveBillAdjustments = () => {
+  const saveBillSettings = () => {
     if (!room) return;
     const payload = {
+      tax_cents: Math.max(0, taxCentsPreview),
+      tip_cents: Math.max(0, tipCentsPreview),
       bill_discount_cents: Math.max(0, billDiscountCentsPreview),
       bill_charges_cents: Math.max(0, billChargesCentsPreview)
     };
     sendOp({ kind: 'set_tax_tip', actor_id: identity.userId, payload });
     applyLocalOp({ kind: 'set_tax_tip', payload });
-    syncBillAdjustmentInputsFromRoom();
-    showBillAdjustmentsModal = false;
+    syncBillSettingsInputsFromRoom();
+    showBillSettingsModal = false;
   };
 
-  const saveTaxTip = () => {
-    const payload = {
-      tax_cents: Math.max(0, taxCentsPreview),
-      tip_cents: Math.max(0, tipCentsPreview)
-    };
-    sendOp({ kind: 'set_tax_tip', actor_id: identity.userId, payload });
-    applyLocalOp({ kind: 'set_tax_tip', payload });
-    syncTaxTipInputsFromRoom();
-    showTaxTipModal = false;
-  };
-
-  const clearTaxTipInputs = () => {
+  const clearBillSettingsInputs = () => {
     taxInput = '';
     tipInput = '';
-  };
-
-  const clearBillAdjustmentInputs = () => {
     billDiscountInput = '';
     billChargesInput = '';
   };
@@ -4610,13 +4598,6 @@ $: if (!summaryData) {
         {#if room}
           <div class="flex items-center gap-2">
             <button
-              class={`action-btn action-btn-surface ${bulkAssignMode ? 'border-cyan-300/60 bg-cyan-500/20 text-cyan-100' : ''}`}
-              type="button"
-              on:click={() => setBulkAssignMode(!bulkAssignMode)}
-            >
-              {bulkAssignMode ? 'Done' : 'Bulk'}
-            </button>
-            <button
               class={`action-btn action-btn-surface receipt-upload-btn ${receiptUploading ? 'opacity-60 pointer-events-none' : ''}`}
               type="button"
               on:click={() => receiptFileInputEl?.click()}
@@ -4641,51 +4622,11 @@ $: if (!summaryData) {
         {/if}
       </div>
       {#if bulkAssignMode}
-        <div class="rounded-xl border border-cyan-400/35 bg-cyan-500/10 p-3 space-y-3 ui-panel">
-          <div class="flex items-center justify-between gap-3 text-sm">
-            <p class="text-cyan-100 font-semibold">
-              Bulk assign mode
-              <span class="text-cyan-200/90 font-normal">· {bulkSelectedItemIds.length} selected</span>
-            </p>
-            <button class="action-btn action-btn-surface action-btn-compact" type="button" on:click={() => (bulkAssignSelectedByItemId = {})}>
-              Clear selected
-            </button>
-          </div>
-          <label class="block space-y-1">
-            <span class="text-xs uppercase tracking-wide text-cyan-100/80">Assign selected to</span>
-            <select class="input w-full" bind:value={bulkAssignTargetParticipantId}>
-              <option value="" disabled>Select person</option>
-              {#each participants as participant}
-                <option value={participant.id}>{participant.name}</option>
-              {/each}
-            </select>
-          </label>
-          <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <button
-              class="btn btn-outline w-full"
-              type="button"
-              on:click={applyBulkSplitEvenlyAcrossRoom}
-              disabled={bulkSelectedItemIds.length === 0 || participants.length === 0}
-            >
-              Split selected evenly
-            </button>
-            <button
-              class="btn btn-outline w-full"
-              type="button"
-              on:click={applyBulkAssignToParticipant}
-              disabled={bulkSelectedItemIds.length === 0 || !bulkAssignTargetParticipantId}
-            >
-              Assign selected
-            </button>
-            <button
-              class="btn btn-outline w-full"
-              type="button"
-              on:click={clearBulkAssignments}
-              disabled={bulkSelectedItemIds.length === 0}
-            >
-              Clear assignments
-            </button>
-          </div>
+        <div class="rounded-xl border border-cyan-400/35 bg-cyan-500/10 px-3 py-2 ui-panel">
+          <p class="text-sm text-cyan-100 font-semibold">
+            Bulk assign mode
+            <span class="text-cyan-200/90 font-normal">· {bulkSelectedItemIds.length} selected</span>
+          </p>
         </div>
       {/if}
       {#if room}
@@ -4972,26 +4913,87 @@ $: if (!summaryData) {
 
   <div class="sticky-toolbar toolbar-polish">
     <div class="mx-auto w-full max-w-md space-y-2">
-      {#if room?.participants?.[identity.userId]}
-        <button
-          class="btn w-full {room.participants[identity.userId].finished ? 'border-green-400/40 bg-green-500/20 text-green-100' : 'border-red-400/40 bg-red-500/20 text-red-100'}"
-          on:click={toggleMyFinished}
-        >
-          {#if room.participants[identity.userId].finished}
-            ✓ I'm Done
-          {:else}
-            Mark as Done
+      {#if bulkAssignMode}
+        <div class="space-y-2">
+          <div class="flex items-center justify-between gap-2">
+            <p class="text-sm text-cyan-100 font-semibold">
+              Bulk · {bulkSelectedItemIds.length} selected
+            </p>
+            <button class="action-btn action-btn-surface action-btn-compact" type="button" on:click={() => (bulkAssignSelectedByItemId = {})}>
+              Clear selected
+            </button>
+          </div>
+          <label class="block space-y-1">
+            <span class="text-xs uppercase tracking-wide text-cyan-100/80">Assign selected to</span>
+            <select class="input w-full" bind:value={bulkAssignTargetParticipantId}>
+              <option value="" disabled>Select person</option>
+              {#each participants as participant}
+                <option value={participant.id}>{participant.name}</option>
+              {/each}
+            </select>
+          </label>
+          <div class="grid grid-cols-2 gap-2">
+            <button
+              class="btn btn-outline w-full"
+              type="button"
+              on:click={applyBulkSplitEvenlyAcrossRoom}
+              disabled={bulkSelectedItemIds.length === 0 || participants.length === 0}
+            >
+              Split evenly
+            </button>
+            <button
+              class="btn btn-outline w-full"
+              type="button"
+              on:click={applyBulkAssignToParticipant}
+              disabled={bulkSelectedItemIds.length === 0 || !bulkAssignTargetParticipantId}
+            >
+              Assign selected
+            </button>
+            <button
+              class="btn btn-outline w-full"
+              type="button"
+              on:click={clearBulkAssignments}
+              disabled={bulkSelectedItemIds.length === 0}
+            >
+              Clear assignments
+            </button>
+            <button
+              class="btn w-full border-cyan-400/40 bg-cyan-500/20 text-cyan-100"
+              type="button"
+              on:click={() => setBulkAssignMode(false)}
+            >
+              Exit Bulk
+            </button>
+          </div>
+        </div>
+      {:else}
+        {#if room?.participants?.[identity.userId]}
+          <button
+            class="btn w-full {room.participants[identity.userId].finished ? 'border-green-400/40 bg-green-500/20 text-green-100' : 'border-red-400/40 bg-red-500/20 text-red-100'}"
+            on:click={toggleMyFinished}
+          >
+            {#if room.participants[identity.userId].finished}
+              ✓ I'm Done
+            {:else}
+              Mark as Done
+            {/if}
+          </button>
+        {/if}
+        <div class="grid grid-cols-2 gap-2">
+          <button class="btn btn-primary w-full" on:click={openNewItemModal}>Add Item</button>
+          <button class="btn btn-outline w-full" on:click={() => { syncBillSettingsInputsFromRoom(); showBillSettingsModal = true; }}>Tax/Tip</button>
+          <button class="btn btn-outline w-full" on:click={async () => { await buildSummary(); showSummary = true; }}>Summary</button>
+          {#if room}
+            <button
+              class="btn btn-outline w-full"
+              type="button"
+              on:click={() => setBulkAssignMode(true)}
+            >
+              Bulk
+            </button>
           {/if}
-        </button>
+        </div>
       {/if}
-      <div class="grid grid-cols-2 gap-2">
-        <button class="btn btn-primary w-full" on:click={openNewItemModal}>Add Item</button>
-        <button class="btn btn-outline w-full" on:click={() => { syncTaxTipInputsFromRoom(); showTaxTipModal = true; }}>Tax/Tip</button>
-        <button class="btn btn-outline w-full" on:click={() => { syncBillAdjustmentInputsFromRoom(); showBillAdjustmentsModal = true; }}>
-          Adjustments
-        </button>
-        <button class="btn btn-outline w-full" on:click={async () => { await buildSummary(); showSummary = true; }}>Summary</button>
-      </div>
     </div>
   </div>
 
@@ -5974,6 +5976,11 @@ $: if (!summaryData) {
                 <div class="text-xs text-surface-300">
                   This receipt: {formatAmount(receiptImportedTotalCents, receiptCurrencySelection)}
                 </div>
+                {#if Number.isFinite(projectedBillTotalBeforeTipCents)}
+                  <div class="text-xs text-surface-300 mt-1">
+                    Bill total before tip: {formatAmount(projectedBillTotalBeforeTipCents, receiptCurrencySelection)}
+                  </div>
+                {/if}
               </div>
             </div>
           </div>
@@ -6164,83 +6171,11 @@ $: if (!summaryData) {
     </div>
   {/if}
 
-  {#if showBillAdjustmentsModal}
+  {#if showBillSettingsModal}
     <div class="modal-scrim">
       <div class="glass-card bottom-sheet ui-bottom-sheet">
-        <h3 class="text-lg font-semibold modal-title">Bill-wide adjustments</h3>
-        <p class="text-xs text-surface-300 modal-subtitle">These values are split by item cost across participants.</p>
-        <label class="block space-y-1 ui-input-stack">
-          <span class="text-sm text-surface-200">
-            Bill-wide discount ({symbolFor(roomCurrency) || roomCurrency})
-          </span>
-          <input
-            class="input w-full"
-            type="number"
-            min="0"
-            step={1 / factorFor(roomCurrency)}
-            inputmode="decimal"
-            bind:value={billDiscountInput}
-            on:blur={() => {
-              billDiscountInput = normalizeRequiredInputByCurrency(billDiscountInput, roomCurrency);
-            }}
-          />
-          <p class="text-xs text-surface-400">
-            ≈ {(billDiscountPercent || 0).toFixed(2)}% of item subtotal
-          </p>
-        </label>
-        <label class="block space-y-1 ui-input-stack">
-          <span class="text-sm text-surface-200">
-            Bill-wide non-tip charges ({symbolFor(roomCurrency) || roomCurrency})
-          </span>
-          <input
-            class="input w-full"
-            type="number"
-            min="0"
-            step={1 / factorFor(roomCurrency)}
-            inputmode="decimal"
-            bind:value={billChargesInput}
-            on:blur={() => {
-              billChargesInput = normalizeRequiredInputByCurrency(billChargesInput, roomCurrency);
-            }}
-          />
-          <p class="text-xs text-surface-400">
-            ≈ {(billChargesPercent || 0).toFixed(2)}% of item subtotal
-          </p>
-        </label>
-        <p class="text-xs text-surface-300">
-          Split by item cost. Non-tip charges are excluded from tip base.
-        </p>
-        <div class="flex gap-3 modal-actions">
-          <button class="btn btn-outline w-full" on:click={() => (showBillAdjustmentsModal = false)}>Cancel</button>
-          <button
-            class="btn btn-primary w-full"
-            type="button"
-            disabled={!billAdjustmentsDirty}
-            on:click={saveBillAdjustments}
-          >
-            Save adjustments
-          </button>
-        </div>
-        <div class="flex gap-3 modal-actions">
-          <button class="btn btn-outline w-full" type="button" on:click={clearBillAdjustmentInputs}>Clear</button>
-          <button
-            class="btn btn-outline w-full"
-            type="button"
-            disabled={!billAdjustmentsDirty}
-            on:click={syncBillAdjustmentInputsFromRoom}
-          >
-            Revert
-          </button>
-        </div>
-      </div>
-    </div>
-  {/if}
-
-  {#if showTaxTipModal}
-    <div class="modal-scrim">
-      <div class="glass-card bottom-sheet ui-bottom-sheet">
-        <h3 class="text-lg font-semibold modal-title">Tax / Tip</h3>
-        <p class="text-xs text-surface-300 modal-subtitle">Tax uses discounted subtotal; tip uses pre-discount item subtotal.</p>
+        <h3 class="text-lg font-semibold modal-title">Tax, Tip &amp; Adjustments</h3>
+        <p class="text-xs text-surface-300 modal-subtitle">Tax uses discounted subtotal; tip uses pre-discount item subtotal. Adjustments are split by item cost.</p>
         <p class="text-xs text-surface-300">
           Tip base (pre-discount items): {formatAmount(preTaxGrossSubtotalCents || 0, roomCurrency)}
         </p>
@@ -6279,9 +6214,6 @@ $: if (!summaryData) {
             ≈ {(tipPercent || 0).toFixed(2)}% of pre-discount items subtotal
           </p>
         </label>
-        <p class="text-xs text-surface-400">
-          Bill-wide discounts and non-tip charges are edited in the Adjustments modal.
-        </p>
         <div class="flex flex-wrap gap-2">
           {#each [15, 18, 20] as pct}
             <button
@@ -6293,17 +6225,66 @@ $: if (!summaryData) {
             </button>
           {/each}
         </div>
+        <label class="block space-y-1 ui-input-stack">
+          <span class="text-sm text-surface-200">
+            Bill-wide discount ({symbolFor(roomCurrency) || roomCurrency})
+          </span>
+          <input
+            class="input w-full"
+            type="number"
+            min="0"
+            step={1 / factorFor(roomCurrency)}
+            inputmode="decimal"
+            bind:value={billDiscountInput}
+            on:blur={() => {
+              billDiscountInput = normalizeRequiredInputByCurrency(billDiscountInput, roomCurrency);
+            }}
+          />
+          <p class="text-xs text-surface-400">
+            ≈ {(billDiscountPercent || 0).toFixed(2)}% of item subtotal
+          </p>
+        </label>
+        <label class="block space-y-1 ui-input-stack">
+          <span class="text-sm text-surface-200">
+            Bill-wide non-tip charges ({symbolFor(roomCurrency) || roomCurrency})
+          </span>
+          <input
+            class="input w-full"
+            type="number"
+            min="0"
+            step={1 / factorFor(roomCurrency)}
+            inputmode="decimal"
+            bind:value={billChargesInput}
+            on:blur={() => {
+              billChargesInput = normalizeRequiredInputByCurrency(billChargesInput, roomCurrency);
+            }}
+          />
+          <p class="text-xs text-surface-400">
+            ≈ {(billChargesPercent || 0).toFixed(2)}% of item subtotal
+          </p>
+        </label>
         <div class="flex gap-3 modal-actions">
-          <button class="btn btn-outline w-full" on:click={() => (showTaxTipModal = false)}>Cancel</button>
+          <button class="btn btn-outline w-full" on:click={() => (showBillSettingsModal = false)}>Cancel</button>
           <button
             class="btn btn-primary w-full"
-            disabled={!taxTipDirty}
-            on:click={saveTaxTip}
+            type="button"
+            disabled={!billSettingsDirty}
+            on:click={saveBillSettings}
           >
             Save
           </button>
         </div>
-        <button class="btn btn-outline w-full" type="button" on:click={clearTaxTipInputs}>Clear</button>
+        <div class="flex gap-3 modal-actions">
+          <button class="action-btn action-btn-danger action-btn-compact w-full" type="button" on:click={clearBillSettingsInputs}>Clear</button>
+          <button
+            class="btn btn-outline w-full"
+            type="button"
+            disabled={!billSettingsDirty}
+            on:click={syncBillSettingsInputsFromRoom}
+          >
+            Revert
+          </button>
+        </div>
       </div>
     </div>
   {/if}
@@ -6376,6 +6357,17 @@ $: if (!summaryData) {
           </div>
           <div class="h-px bg-surface-700/70"></div>
           <div class="flex items-center justify-between gap-3">
+            <span class="text-sm text-surface-300">Bill total before tip</span>
+            <span class="text-sm font-semibold text-white flex items-center gap-2">
+              <span>{formatAmount(summaryData.totalBeforeTip)}</span>
+              {#if convertSummaryAmount(summaryData.totalBeforeTip) !== null}
+                <span class="text-surface-500">→</span>
+                <span class="text-cyan-200">{formatCurrency(convertSummaryAmount(summaryData.totalBeforeTip)!, targetCurrency, symbolFor(targetCurrency), exponentFor(targetCurrency))}</span>
+              {/if}
+            </span>
+          </div>
+          <div class="h-px bg-surface-700/70"></div>
+          <div class="flex items-center justify-between gap-3">
             <span class="text-sm text-surface-300">Bill total</span>
             <span class="text-base font-semibold text-white flex items-center gap-2">
               <span>{formatAmount(summaryData.total)}</span>
@@ -6386,6 +6378,16 @@ $: if (!summaryData) {
             </span>
           </div>
         </div>
+        {#if items.some((it) => Object.values(it.assigned || {}).filter(Boolean).length === 0) || participants.some((p) => !p.finished)}
+          <div class="rounded-xl bg-warning-500/20 border border-warning-500/40 px-4 py-3 space-y-1 ui-panel">
+            {#if items.some((it) => Object.values(it.assigned || {}).filter(Boolean).length === 0)}
+              <p class="text-sm text-warning-200">Some items have not been assigned to anyone.</p>
+            {/if}
+            {#if participants.some((p) => !p.finished)}
+              <p class="text-sm text-warning-200">Not everyone in the room is marked ready.</p>
+            {/if}
+          </div>
+        {/if}
         <div class="space-y-3">
           {#if summaryVisiblePeople.length === 0}
             <div class="rounded-xl border border-surface-700/80 bg-surface-900/45 p-3 text-sm text-surface-300 ui-panel">
