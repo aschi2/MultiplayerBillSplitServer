@@ -6275,7 +6275,7 @@ $: if (!summaryData) {
           </button>
         </div>
         <div class="flex gap-3 modal-actions">
-          <button class="action-btn action-btn-danger action-btn-compact w-full" type="button" on:click={clearBillSettingsInputs}>Clear</button>
+          <button class="action-btn action-btn-danger action-btn-compact normal-case w-full" type="button" on:click={clearBillSettingsInputs}>Clear</button>
           <button
             class="btn btn-outline w-full"
             type="button"
