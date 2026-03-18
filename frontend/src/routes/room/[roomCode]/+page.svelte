@@ -5,14 +5,17 @@
   import Avatar from '$lib/components/Avatar.svelte';
   import ItemEditorFields from '$lib/components/ItemEditorFields.svelte';
   import ReceiptCropModal from '$lib/components/ReceiptCropModal.svelte';
-  import FriendGroupsModal from '$lib/components/FriendGroupsModal.svelte';
+  import ContactsModal from '$lib/components/ContactsModal.svelte';
   import { upsertBillHistoryEntry } from '$lib/billHistory';
   import { formatCurrency, initialsFromName } from '$lib/utils';
   import { loadIdentityPrefs, saveIdentityPrefs } from '$lib/identityPrefs';
   import {
-    loadFriendGroups,
-    type FriendGroup
-  } from '$lib/friendGroups';
+    loadContacts,
+    trackRecentPeople,
+    touchContact,
+    migrateFromFriendGroups,
+    type Contact
+  } from '$lib/contacts';
   import type {
     RoomDoc,
     ReceiptParseResult,
@@ -216,10 +219,10 @@
   let bulkAssignMode = false;
   let bulkAssignSelectedByItemId: Record<string, boolean> = {};
   let bulkAssignTargetParticipantId = '';
-  let friendGroups: FriendGroup[] = [];
-  let addPersonGroupId = '';
-  let showFriendGroupsModal = false;
-  let friendGroupsModalInitialGroupId = '';
+  let contacts: Contact[] = [];
+  let showContactsModal = false;
+  let addPersonSelectedContactIds: Set<string> = new Set();
+  let addPersonSearchFilter = '';
   type EditableItemReviewFlags = {
     name: boolean;
     quantity: boolean;
@@ -1081,44 +1084,40 @@
     openReceiptItemEditor(targetIndex);
   };
 
-  const loadFriendGroupsIntoState = () => {
-    friendGroups = loadFriendGroups();
+  const toggleContactSelection = (contactId: string) => {
+    const next = new Set(addPersonSelectedContactIds);
+    if (next.has(contactId)) next.delete(contactId);
+    else next.add(contactId);
+    addPersonSelectedContactIds = next;
   };
 
-  const openFriendGroupEditor = (groupId = '') => {
-    loadFriendGroupsIntoState();
-    friendGroupsModalInitialGroupId = groupId;
-    showFriendGroupsModal = true;
-  };
-
-  const handleFriendGroupsChange = (
-    event: CustomEvent<{ groups: FriendGroup[]; selectedGroupId: string }>
-  ) => {
-    friendGroups = Array.isArray(event.detail?.groups) ? event.detail.groups : loadFriendGroups();
-    const selectedGroupId = `${event.detail?.selectedGroupId || ''}`.trim();
-    if (selectedGroupId) {
-      addPersonGroupId = selectedGroupId;
-    }
-  };
-
-  const handleFriendGroupsModalClose = () => {
-    friendGroupsModalInitialGroupId = '';
-    loadFriendGroupsIntoState();
-  };
-
-  const applyFriendGroupToRoom = (groupId: string) => {
-    if (!groupId || !room) return;
-    const group = friendGroups.find((candidate) => candidate.id === groupId);
-    if (!group) return;
-    group.members.forEach((member) => {
-      const name = `${member.name || ''}`.trim();
+  const addSelectedContactsToRoom = () => {
+    if (!room) return;
+    addPersonSelectedContactIds.forEach((contactId) => {
+      const contact = contacts.find((c) => c.id === contactId);
+      if (!contact) return;
+      const name = contact.name.trim();
       if (!name) return;
       const existing = Object.entries(room?.participants || {}).find(
-        ([, participant]) => (participant as Participant).name.trim().toLowerCase() === name.toLowerCase()
+        ([, p]) => (p as Participant).name.trim().toLowerCase() === name.toLowerCase()
       );
       const id = existing ? existing[0] : `guest-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-      sendParticipantUpdate(id, name, false, member.venmoUsername || '');
+      sendParticipantUpdate(id, name, false, contact.venmoUsername || '');
+      touchContact(contactId);
     });
+    showAddPersonModal = false;
+    addPersonSelectedContactIds = new Set();
+    addPersonSearchFilter = '';
+  };
+
+  const addManualPersonToRoom = () => {
+    const name = addPersonName.trim();
+    if (!name) return;
+    const existing = Object.entries(room?.participants || {}).find(
+      ([, p]) => (p as Participant).name.trim().toLowerCase() === name.toLowerCase()
+    );
+    const id = existing ? existing[0] : `guest-${Date.now()}`;
+    sendParticipantUpdate(id, name, false, addPersonVenmoInput);
     showAddPersonModal = false;
   };
 
@@ -4110,7 +4109,7 @@ $: if (!summaryData) {
 
   onMount(() => {
     hydrateJoinPrefillFromCookies();
-    loadFriendGroupsIntoState();
+    migrateFromFriendGroups();
     const stored = localStorage.getItem(`room:${roomCode}:identity`);
     if (stored) {
       identity = JSON.parse(stored);
@@ -4195,10 +4194,24 @@ $: if (!summaryData) {
       : null;
   $: participants = room ? (Object.values(room.participants) as Participant[]) : [];
   $: if (showAddPersonModal) {
-    loadFriendGroupsIntoState();
+    contacts = loadContacts();
+    addPersonSelectedContactIds = new Set();
+    addPersonSearchFilter = '';
   }
-  $: if (addPersonGroupId && !friendGroups.some((group) => group.id === addPersonGroupId)) {
-    addPersonGroupId = '';
+  $: filteredAddPersonContacts = addPersonSearchFilter.trim()
+    ? contacts.filter((c) => c.name.toLowerCase().includes(addPersonSearchFilter.trim().toLowerCase()))
+    : contacts;
+  $: if (browser && room && identity.userId && identity.name.trim()) {
+    const others = Object.entries(room.participants || {})
+      .filter(([id]) => id !== identity.userId)
+      .map(([, p]) => ({
+        name: (p as Participant).name,
+        venmoUsername: (p as Participant).venmoUsername
+      }))
+      .filter((p) => p.name.trim());
+    if (others.length > 0) {
+      trackRecentPeople(others);
+    }
   }
   $: if (browser && room && identity.userId && identity.name.trim()) {
     scheduleRoomHistoryPersist();
@@ -4245,7 +4258,7 @@ $: if (!summaryData) {
     showNameModal ||
     showRoomNameModal ||
     showAddPersonModal ||
-    showFriendGroupsModal ||
+    showContactsModal ||
     showJoinPrompt ||
     showQrFullscreen;
   $: if (showRepeatedGroupSheet && !activeRepeatedGroup) {
@@ -4508,7 +4521,7 @@ $: if (!summaryData) {
         <button class="action-btn action-btn-surface w-full" on:click={() => { roomNameInput = room?.name || ''; showRoomNameModal = true; }}>
           Rename Bill
         </button>
-        <button class="action-btn action-btn-primary w-full" on:click={() => { addPersonName = ''; addPersonVenmoInput = ''; showAddPersonModal = true; }}>
+        <button class="action-btn action-btn-primary w-full" on:click={() => { addPersonName = ''; addPersonVenmoInput = ''; addPersonSearchFilter = ''; addPersonSelectedContactIds = new Set(); contacts = loadContacts(); showAddPersonModal = true; }}>
           Add Person
         </button>
       </div>
@@ -6600,33 +6613,28 @@ $: if (!summaryData) {
     <div class="modal-scrim">
       <div class="glass-card bottom-sheet ui-bottom-sheet">
         <h3 class="text-lg font-semibold modal-title">Add person</h3>
-        <p class="text-xs text-surface-300 modal-subtitle">Add someone before they join so items can be assigned immediately.</p>
-        <div class="rounded-xl border border-surface-700/80 bg-surface-900/45 p-3 space-y-2 ui-panel">
-          <div class="flex items-center justify-between gap-2">
-            <p class="text-xs font-medium uppercase tracking-wide text-surface-300">Friend groups</p>
-            <button class="action-btn action-btn-surface action-btn-compact" type="button" on:click={() => openFriendGroupEditor(addPersonGroupId)}>
-              Manage groups
-            </button>
+        <p class="text-xs text-surface-300 modal-subtitle">Select contacts or add someone new.</p>
+        <input class="input w-full" bind:value={addPersonSearchFilter} placeholder="Search contacts..." />
+        {#if filteredAddPersonContacts.length}
+          <div class="rounded-xl border border-surface-700 bg-surface-900 p-2 space-y-1 ui-panel add-person-contact-list">
+            {#each filteredAddPersonContacts as contact}
+              <label class="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer add-person-contact-row">
+                <input type="checkbox" checked={addPersonSelectedContactIds.has(contact.id)} on:change={() => toggleContactSelection(contact.id)} />
+                <span class="text-sm text-white">{contact.name}</span>
+                {#if contact.venmoUsername}<span class="text-xs text-surface-300">@{contact.venmoUsername}</span>{/if}
+              </label>
+            {/each}
           </div>
-          {#if friendGroups.length > 0}
-            <select class="input w-full" bind:value={addPersonGroupId}>
-              <option value="">Choose a group (optional)</option>
-              {#each friendGroups as group}
-                <option value={group.id}>{group.name} · {group.members.length} people</option>
-              {/each}
-            </select>
-            <button
-              class="btn btn-outline w-full"
-              type="button"
-              on:click={() => applyFriendGroupToRoom(addPersonGroupId)}
-              disabled={!addPersonGroupId}
-            >
-              Add group members to room
-            </button>
-          {:else}
-            <p class="text-xs text-surface-300">No saved groups yet. Use “Manage groups” to create one.</p>
-          {/if}
-        </div>
+        {:else if !contacts.length}
+          <p class="text-xs text-surface-300">No saved contacts yet. Use "Manage contacts" to create some.</p>
+        {:else}
+          <p class="text-xs text-surface-300">No contacts match your search.</p>
+        {/if}
+        {#if addPersonSelectedContactIds.size}
+          <button class="btn btn-primary w-full" on:click={addSelectedContactsToRoom}>Add ({addPersonSelectedContactIds.size})</button>
+        {/if}
+        <hr class="border-surface-700" />
+        <p class="text-xs font-medium uppercase tracking-wide text-surface-300">Or add manually</p>
         <label class="block modal-field">
           <span class="text-xs font-medium uppercase tracking-wide text-surface-300">Name</span>
           <input class="input w-full" bind:value={addPersonName} placeholder="Name" />
@@ -6637,24 +6645,17 @@ $: if (!summaryData) {
         </label>
         <div class="flex gap-3 modal-actions">
           <button class="btn btn-outline w-full" on:click={() => (showAddPersonModal = false)}>Cancel</button>
-          <button class="btn btn-primary w-full" on:click={() => {
-            const name = addPersonName.trim();
-            if (!name) return;
-            const existing = Object.entries(room?.participants || {}).find(([, p]) => (p as Participant).name.trim().toLowerCase() === name.toLowerCase());
-            const id = existing ? existing[0] : `guest-${Date.now()}`;
-            sendParticipantUpdate(id, name, false, addPersonVenmoInput);
-            showAddPersonModal = false;
-          }}>Add</button>
+          <button class="btn btn-primary w-full" on:click={addManualPersonToRoom}>Add</button>
         </div>
+        <button class="text-xs text-cyan-300 underline mt-1 text-left" type="button" on:click={() => { showAddPersonModal = false; showContactsModal = true; }}>Manage contacts</button>
       </div>
     </div>
   {/if}
 
-  <FriendGroupsModal
-    bind:open={showFriendGroupsModal}
-    initialGroupId={friendGroupsModalInitialGroupId}
-    on:groupschange={handleFriendGroupsChange}
-    on:close={handleFriendGroupsModalClose}
+  <ContactsModal
+    bind:open={showContactsModal}
+    on:contactschange={() => { contacts = loadContacts(); }}
+    on:close={() => { contacts = loadContacts(); }}
   />
 
   {#if showQrFullscreen && qrUrlFullscreen}

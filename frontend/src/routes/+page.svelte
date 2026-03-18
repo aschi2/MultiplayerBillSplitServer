@@ -3,15 +3,15 @@
   import { goto } from '$app/navigation';
   import { loadIdentityPrefs, saveIdentityPrefs } from '$lib/identityPrefs';
   import { loadBillHistory, saveBillHistory, upsertBillHistoryEntry, type BillHistoryEntry } from '$lib/billHistory';
-  import { loadFriendGroups } from '$lib/friendGroups';
-  import FriendGroupsModal from '$lib/components/FriendGroupsModal.svelte';
+  import { loadContacts } from '$lib/contacts';
+  import ContactsModal from '$lib/components/ContactsModal.svelte';
   import { initialsFromName, formatCurrency, colorFromSeed } from '$lib/utils';
   import { getApiBase } from '$lib/api';
   import { EXPONENTS, SYMBOLS } from '$lib/currency';
 
   let showCreate = false;
   let showJoin = false;
-  let showFriendGroupsModal = false;
+  let showContactsModal = false;
   let createName = '';
   let billName = '';
   let createVenmoUsername = '';
@@ -30,8 +30,7 @@
   let billHistoryClockTimer: ReturnType<typeof setInterval> | null = null;
   let billHistoryNowMs = Date.now();
   let landingModalOpen = false;
-  let friendGroupsCount = 0;
-  let friendGroupsModalInitialGroupId = '';
+  let contactsCount = 0;
 
   const BILL_HISTORY_REFRESH_FAST_MS = 5000;
   const BILL_HISTORY_REFRESH_DEFAULT_MS = 30000;
@@ -188,13 +187,12 @@
     billHistory = loadBillHistory();
   };
 
-  const syncFriendGroupsCount = () => {
-    friendGroupsCount = loadFriendGroups().length;
+  const syncContactsCount = () => {
+    contactsCount = loadContacts().length;
   };
 
-  const openFriendGroupsManager = () => {
-    friendGroupsModalInitialGroupId = '';
-    showFriendGroupsModal = true;
+  const openContactsManager = () => {
+    showContactsModal = true;
   };
 
   const refreshBillHistory = async () => {
@@ -358,7 +356,7 @@
     prefillCreateFromCookies();
     prefillJoinFromCookies();
     syncBillHistoryFromCookie();
-    syncFriendGroupsCount();
+    syncContactsCount();
     refreshBillHistory();
     restartBillHistoryClock();
     const handleVisibilityChange = () => {
@@ -376,7 +374,7 @@
     };
   });
 
-  $: landingModalOpen = showCreate || showJoin || showFriendGroupsModal;
+  $: landingModalOpen = showCreate || showJoin || showContactsModal;
   $: setDocumentModalLock(landingModalOpen);
 
   const submitCreate = async () => {
@@ -544,17 +542,17 @@
 
       <button
         class="glass-card touch-card landing-action-card motion-rise motion-rise-delay-3 w-full p-4 text-left"
-        on:click={openFriendGroupsManager}
+        on:click={openContactsManager}
       >
         <div class="flex items-start justify-between gap-3">
           <div>
-            <p class="text-base font-semibold text-white">Manage friend groups</p>
-            <p class="mt-1 text-sm text-surface-300">Create and edit reusable groups before joining a bill.</p>
+            <p class="text-base font-semibold text-white">Contacts</p>
+            <p class="mt-1 text-sm text-surface-300">Manage saved contacts from people you've split bills with.</p>
           </div>
-          <span class="bill-history-chip whitespace-nowrap">{friendGroupsCount} saved</span>
+          <span class="bill-history-chip whitespace-nowrap">{contactsCount} saved</span>
         </div>
         <div class="mt-4">
-          <span class="btn btn-outline w-full">Manage Groups</span>
+          <span class="btn btn-outline w-full">Manage Contacts</span>
         </div>
       </button>
     </main>
@@ -633,11 +631,10 @@
     </section>
   </div>
 
-  <FriendGroupsModal
-    bind:open={showFriendGroupsModal}
-    initialGroupId={friendGroupsModalInitialGroupId}
-    on:groupschange={() => syncFriendGroupsCount()}
-    on:close={() => syncFriendGroupsCount()}
+  <ContactsModal
+    bind:open={showContactsModal}
+    on:contactschange={() => syncContactsCount()}
+    on:close={() => syncContactsCount()}
   />
 
   {#if showCreate}

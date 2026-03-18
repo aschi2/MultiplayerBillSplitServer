@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc -l /Users/austin/codex-projects/MultiplayerBillSplitServer/frontend/src/routes/room/[roomCode]/+page.svelte)",
+      "Bash(grep -n \"showAddPersonModal\\\\|addPersonModal\\\\|AddPersonModal\" /Users/austin/codex-projects/MultiplayerBillSplitServer/frontend/src/routes/room/[roomCode]/+page.svelte)",
+      "Bash(grep -n \"sendParticipantUpdate\\\\|function.*addPerson\\\\|const.*addPerson\" /Users/austin/codex-projects/MultiplayerBillSplitServer/frontend/src/routes/room/[roomCode]/+page.svelte)",
+      "Bash(grep -n \"connectWS\\\\|sendOp\\\\|applyLocalOp\" /Users/austin/codex-projects/MultiplayerBillSplitServer/frontend/src/routes/room/[roomCode]/+page.svelte)",
+      "Bash(grep -rn \"joinNameInput\\\\|joinPrompt\\\\|showJoinPrompt\" /Users/austin/codex-projects/MultiplayerBillSplitServer/frontend/src/routes/room/[roomCode]/+page.svelte)",
+      "Bash(npx svelte-check:*)",
+      "Bash(git stash:*)",
+      "Bash(npm run:*)",
+      "Bash(git show:*)",
+      "Bash(node -e \":*)",
+      "Bash(curl -s http://localhost:3000/)",
+      "Bash(grep -Pn '[\\\\x{201c}\\\\x{201d}]' src/routes/room/[roomCode]/+page.svelte)",
+      "Bash(lsof -ti:3000)",
+      "Bash(xargs kill:*)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(tar czf:*)",
+      "Bash(gcloud compute:*)",
+      "Bash(curl -sI https://bill.thetravelbug.club/)"
+    ]
+  }
+}
