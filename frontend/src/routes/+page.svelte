@@ -490,7 +490,7 @@
       <div class="flex justify-center">
         <img
           src="/brand/divvi-banner.svg?v=3"
-          alt="Divvi"
+          alt="The Divvi"
           class="h-12 w-auto max-w-full"
         />
       </div>
