@@ -486,17 +486,14 @@
 
 <div class="app-screen">
   <div class="mx-auto w-full max-w-md px-5 pt-4 pb-10 space-y-2.5">
-    <header class="accent-gradient glass-card landing-hero p-5 motion-rise">
-      <div class="mt-1 flex justify-center">
+    <header class="accent-gradient glass-card landing-hero px-5 py-3 motion-rise">
+      <div class="flex justify-center">
         <img
           src="/brand/divvi-banner.svg?v=3"
           alt="Divvi"
           class="h-12 w-auto max-w-full"
         />
       </div>
-      <p class="mt-2 text-sm text-white/80">
-        Split receipts in real time with your group. Built for mobile, fast to use at the table.
-      </p>
     </header>
 
     <main class="space-y-2">

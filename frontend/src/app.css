@@ -43,7 +43,7 @@ textarea {
 }
 
 .glass-card {
-  @apply border border-surface-700/80 bg-surface-900/75 backdrop-blur-md;
+  @apply border border-surface-600/60 bg-surface-900/75 backdrop-blur-md;
   border-radius: 1.15rem;
   background-image:
     linear-gradient(150deg, rgba(148, 163, 184, 0.06), transparent 42%),
@@ -85,10 +85,7 @@ textarea {
     calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 0.6rem)
   );
   margin-bottom: max(0.4rem, env(safe-area-inset-bottom));
-  border-top-left-radius: 1.6rem;
-  border-top-right-radius: 1.6rem;
-  border-bottom-left-radius: 1.2rem;
-  border-bottom-right-radius: 1.2rem;
+  border-radius: 1.5rem;
   padding: 1.25rem 1.25rem calc(1rem + max(0.35rem, env(safe-area-inset-bottom)));
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
@@ -127,13 +124,13 @@ textarea {
   animation: ui-sheet-content-in 260ms var(--ui-ease-soft) both;
 }
 
-.ui-bottom-sheet > :nth-child(1) { animation-delay: 20ms; }
-.ui-bottom-sheet > :nth-child(2) { animation-delay: 40ms; }
-.ui-bottom-sheet > :nth-child(3) { animation-delay: 60ms; }
-.ui-bottom-sheet > :nth-child(4) { animation-delay: 80ms; }
-.ui-bottom-sheet > :nth-child(5) { animation-delay: 100ms; }
-.ui-bottom-sheet > :nth-child(6) { animation-delay: 120ms; }
-.ui-bottom-sheet > :nth-child(7) { animation-delay: 140ms; }
+.ui-bottom-sheet > :nth-child(1) { animation-delay: 40ms; }
+.ui-bottom-sheet > :nth-child(2) { animation-delay: 80ms; }
+.ui-bottom-sheet > :nth-child(3) { animation-delay: 120ms; }
+.ui-bottom-sheet > :nth-child(4) { animation-delay: 160ms; }
+.ui-bottom-sheet > :nth-child(5) { animation-delay: 200ms; }
+.ui-bottom-sheet > :nth-child(6) { animation-delay: 240ms; }
+.ui-bottom-sheet > :nth-child(7) { animation-delay: 280ms; }
 
 .ui-bottom-sheet > * {
   position: relative;
@@ -259,7 +256,7 @@ textarea {
 
   .btn-primary {
     background: linear-gradient(135deg, rgba(20, 184, 166, 0.95), rgba(14, 165, 233, 0.95));
-    @apply border-cyan-300/30 shadow-lg shadow-cyan-900/40;
+    @apply border-cyan-300/30 shadow-lg shadow-cyan-500/25;
   }
 
   .btn-secondary {
@@ -281,7 +278,7 @@ textarea {
   }
 
   .input:focus {
-    @apply border-cyan-300/70 ring-2 ring-cyan-400/35;
+    @apply border-cyan-300/70 ring-2 ring-cyan-400/50;
   }
 
   .action-btn {
