@@ -54,12 +54,6 @@
   let receiptLastUploadedFile: File | null = null;
   let showReceiptCropModal = false;
   let receiptCropSourceFile: File | null = null;
-  let receiptIsAddon = false;
-  let baselineTaxCents = 0;
-  let baselineTipCents = 0;
-  let baselineBillDiscountCents = 0;
-  let baselineBillChargesCents = 0;
-  let baselineSubtotalCents = 0;
   let parsedTaxInput = '';
   let parsedTipInput = '';
   let parsedBillDiscountInput = '';
@@ -71,21 +65,9 @@
   let parsedBillChargesCents = 0;
   let receiptSubtotalCents = 0;
   let receiptGrossSubtotalCents = 0;
-  let projectedTaxCents = 0;
-  let projectedTipCents = 0;
-  let projectedBillDiscountCents = 0;
-  let projectedBillChargesCents = 0;
   let receiptImportedTotalCents = 0;
-  let baselineBillTotalCents = 0;
-  let projectedBillTotalAfterImportCents = 0;
   let receiptTaxPercent = 0;
   let receiptTipPercent = 0;
-  let projectedTaxPercent = 0;
-  let projectedTipPercent = 0;
-  let projectedBillDiscountPercent = 0;
-  let projectedBillChargesPercent = 0;
-  let projectedDiscountPercentBaseCents = 0;
-  let baselineTipPercentBaseCents = 0;
   let showItemModal = false;
   let showItemAddonsModal = false;
   let showRepeatedGroupSheet = false;
@@ -3082,26 +3064,6 @@ $: if (!summaryData) {
     receiptError = null;
     receiptUploading = true;
     receiptTryingAgain = escalate;
-    baselineTaxCents = room?.tax_cents || 0;
-    baselineTipCents = room?.tip_cents || 0;
-    baselineBillDiscountCents = Math.max(0, room?.bill_discount_cents || 0);
-    baselineBillChargesCents = Math.max(0, room?.bill_charges_cents || 0);
-    baselineTipPercentBaseCents = items.reduce((sum, it) => sum + Math.max(0, Number(it.line_price_cents || 0)), 0);
-    const baselineItemsNet = items.reduce((sum, it) => {
-      const qty = it.quantity || 1;
-      const gross = Number(it.line_price_cents || 0);
-      const discount = Number(it.discount_cents || 0) * qty;
-      const net = Math.max(0, gross - discount);
-      return sum + net;
-    }, 0);
-    baselineSubtotalCents = Math.max(0, baselineItemsNet - Math.max(0, room?.bill_discount_cents || 0));
-    const hasExistingRoomData = !!room &&
-      (Object.keys(room.items || {}).length > 0 ||
-        Math.max(0, room.bill_discount_cents || 0) > 0 ||
-        Math.max(0, room.bill_charges_cents || 0) > 0 ||
-        Math.max(0, room.tax_cents || 0) > 0 ||
-        Math.max(0, room.tip_cents || 0) > 0);
-    receiptIsAddon = hasExistingRoomData || baselineSubtotalCents > 0;
     parsedTaxInput = '';
     parsedTipInput = '';
     parsedBillDiscountInput = '';
@@ -3599,19 +3561,11 @@ $: if (!summaryData) {
       if (receiptCurrencySelection && receiptCurrencySelection !== roomCurrency) {
         changeCurrency(receiptCurrencySelection);
       }
-      const currentTax = room.tax_cents || 0;
-      const currentTip = room.tip_cents || 0;
-      const newTax = receiptIsAddon ? currentTax + taxDelta : taxDelta;
-      const newTip = receiptIsAddon ? currentTip + tipDelta : tipDelta;
-      const currentBillDiscount = room.bill_discount_cents || 0;
-      const currentBillCharges = room.bill_charges_cents || 0;
-      const newBillDiscount = receiptIsAddon ? currentBillDiscount + billDiscountDelta : billDiscountDelta;
-      const newBillCharges = receiptIsAddon ? currentBillCharges + billChargesDelta : billChargesDelta;
       const payload = {
-        tax_cents: newTax,
-        tip_cents: newTip,
-        bill_discount_cents: newBillDiscount,
-        bill_charges_cents: newBillCharges
+        tax_cents: taxDelta,
+        tip_cents: tipDelta,
+        bill_discount_cents: billDiscountDelta,
+        bill_charges_cents: billChargesDelta
       };
       ws.send(
         JSON.stringify({
@@ -4273,70 +4227,14 @@ $: if (!summaryData) {
   $: receiptSubtotalCents = subtotalFromEditable(editableItems);
   $: receiptGrossSubtotalCents = itemGrossSubtotalFromEditable(editableItems);
   $: parsedTaxCents = parseByCurrency(parsedTaxInput, receiptCurrencySelection || roomCurrency);
-  $: baselineBillTotalCents = Math.max(
-    0,
-    baselineSubtotalCents + baselineTaxCents + baselineTipCents + baselineBillChargesCents
-  );
   $: receiptImportedTotalCents = Math.max(
     0,
     receiptSubtotalCents + parsedTaxCents + parsedTipCents + parsedBillChargesCents
   );
-  $: projectedTaxCents =
-    receiptCurrencySelection && roomCurrency && receiptCurrencySelection !== roomCurrency
-      ? NaN
-      : baselineTaxCents + parsedTaxCents;
-  $: projectedTipCents =
-    receiptCurrencySelection && roomCurrency && receiptCurrencySelection !== roomCurrency
-      ? NaN
-      : baselineTipCents + parsedTipCents;
-  $: projectedBillDiscountCents =
-    receiptCurrencySelection && roomCurrency && receiptCurrencySelection !== roomCurrency
-      ? NaN
-      : baselineBillDiscountCents + parsedBillDiscountCents;
-  $: projectedBillChargesCents =
-    receiptCurrencySelection && roomCurrency && receiptCurrencySelection !== roomCurrency
-      ? NaN
-      : baselineBillChargesCents + parsedBillChargesCents;
-  $: projectedBillTotalAfterImportCents =
-    receiptCurrencySelection && roomCurrency && receiptCurrencySelection !== roomCurrency
-      ? NaN
-      : Math.max(0, baselineBillTotalCents + receiptImportedTotalCents);
-  $: projectedBillTotalBeforeTipCents =
-    receiptCurrencySelection && roomCurrency && receiptCurrencySelection !== roomCurrency
-      ? NaN
-      : Math.max(0, projectedBillTotalAfterImportCents - projectedTipCents);
   $: receiptTaxPercent =
     receiptSubtotalCents > 0 ? (parsedTaxCents / receiptSubtotalCents) * 100 : 0;
   $: receiptTipPercent =
     receiptGrossSubtotalCents > 0 ? (parsedTipCents / receiptGrossSubtotalCents) * 100 : 0;
-  $: projectedTaxPercent =
-    !Number.isFinite(projectedTaxCents)
-      ? 0
-      : baselineSubtotalCents + receiptSubtotalCents > 0
-      ? (projectedTaxCents / (baselineSubtotalCents + receiptSubtotalCents)) * 100
-      : 0;
-  $: projectedTipPercent =
-    !Number.isFinite(projectedTipCents)
-      ? 0
-      : baselineTipPercentBaseCents + receiptGrossSubtotalCents > 0
-      ? (projectedTipCents / (baselineTipPercentBaseCents + receiptGrossSubtotalCents)) * 100
-      : 0;
-  $: projectedBillDiscountPercent =
-    !Number.isFinite(projectedBillDiscountCents)
-      ? 0
-      : projectedDiscountPercentBaseCents > 0
-      ? (projectedBillDiscountCents / projectedDiscountPercentBaseCents) * 100
-      : 0;
-  $: projectedDiscountPercentBaseCents =
-    !Number.isFinite(projectedBillDiscountCents)
-      ? 0
-      : Math.max(0, baselineSubtotalCents + receiptSubtotalCents + projectedBillDiscountCents);
-  $: projectedBillChargesPercent =
-    !Number.isFinite(projectedBillChargesCents)
-      ? 0
-      : baselineSubtotalCents + receiptSubtotalCents > 0
-      ? (projectedBillChargesCents / (baselineSubtotalCents + receiptSubtotalCents)) * 100
-      : 0;
 
   const toCents = (val: string, code = roomCurrency) => {
     const factor = factorFor(code);
@@ -4578,11 +4476,11 @@ $: if (!summaryData) {
 
   <main class="mx-auto w-full max-w-md px-4 space-y-4 pb-24">
     {#if warningBanner}
-      <div class="rounded-xl bg-warning-500/20 text-warning-200 px-4 py-3 text-sm border border-warning-500/40 flex items-center justify-between gap-3 room-alert-card ui-panel">
+      <div class="rounded-xl bg-amber-500/15 text-amber-100 px-4 py-3 text-sm border border-amber-400/40 flex items-center justify-between gap-3 room-alert-card ui-panel">
         <div class="min-w-0">
           Receipt parsed with {receiptWarnings.length} note{receiptWarnings.length === 1 ? '' : 's'}—review recommended.
         </div>
-        <button class="btn btn-outline shrink-0" type="button" on:click={() => (showReceiptReview = true)}>
+        <button class="action-btn action-btn-surface shrink-0" type="button" on:click={() => (showReceiptReview = true)}>
           Review
         </button>
       </div>
@@ -4608,7 +4506,7 @@ $: if (!summaryData) {
     <section class="space-y-3 room-items-section motion-rise motion-rise-delay-1">
       <div class="flex items-center justify-between section-heading-row">
         <h2 class="text-lg font-semibold">Items</h2>
-        {#if room}
+        {#if room && items.length === 0}
           <div class="flex items-center gap-2">
             <button
               class={`action-btn action-btn-surface receipt-upload-btn ${receiptUploading ? 'opacity-60 pointer-events-none' : ''}`}
@@ -4625,9 +4523,7 @@ $: if (!summaryData) {
                   ? receiptTryingAgain
                     ? 'Trying again...'
                     : 'Uploading...'
-                  : items.length > 0
-                    ? 'Add receipt'
-                    : 'Upload receipt'}
+                  : 'Upload receipt'}
               </span>
             </button>
             <input bind:this={receiptFileInputEl} type="file" class="hidden" accept="image/*" on:change={submitReceipt} />
@@ -5381,9 +5277,9 @@ $: if (!summaryData) {
           {/if}
         </div>
         {#if receiptWarnings.length > 0}
-          <div class="rounded-xl border border-warning-500/40 bg-warning-500/10 text-warning-200 p-3 text-sm space-y-1 ui-panel">
-            <div class="font-semibold">Notes from parser</div>
-            <ul class="list-disc list-inside space-y-1">
+          <div class="rounded-xl border border-amber-400/40 bg-amber-500/10 text-amber-100 p-3 text-sm space-y-1 ui-panel">
+            <div class="font-semibold text-amber-200">Notes from parser</div>
+            <ul class="list-disc list-inside space-y-1 text-amber-100/80">
               {#each receiptWarnings as w}
                 <li>{w}</li>
               {/each}
@@ -5391,10 +5287,10 @@ $: if (!summaryData) {
           </div>
         {/if}
         {#if receiptFlaggedIndices.length > 0}
-          <div class="rounded-xl border border-amber-400/45 bg-amber-500/12 p-3 space-y-2 ui-panel">
+          <div class="rounded-xl border border-amber-400/40 bg-amber-500/10 p-3 space-y-2 ui-panel">
             <div class="flex items-center justify-between gap-2 flex-wrap">
-              <p class="text-xs text-amber-100">
-                {receiptFlaggedIndices.length} item line{receiptFlaggedIndices.length === 1 ? '' : 's'} need review.
+              <p class="text-sm text-amber-100">
+                {receiptFlaggedIndices.length} item{receiptFlaggedIndices.length === 1 ? '' : 's'} flagged for review
               </p>
               <div class="flex items-center gap-2">
                 <button
@@ -5402,7 +5298,7 @@ $: if (!summaryData) {
                   type="button"
                   on:click={() => (showReceiptFlaggedOnly = !showReceiptFlaggedOnly)}
                 >
-                  {showReceiptFlaggedOnly ? 'Show all lines' : 'Flagged only'}
+                  {showReceiptFlaggedOnly ? 'Show all' : 'Flagged only'}
                 </button>
                 <button
                   class="action-btn action-btn-surface action-btn-compact"
@@ -5410,7 +5306,7 @@ $: if (!summaryData) {
                   on:click={focusNextFlaggedReceiptItem}
                   disabled={receiptFlaggedIndices.length === 0}
                 >
-                  Next flagged
+                  Next
                 </button>
               </div>
             </div>
@@ -5425,15 +5321,15 @@ $: if (!summaryData) {
           <div
             id={`receipt-review-item-${index}`}
             class={`glass-card room-item-card rounded-2xl p-4 flex items-start justify-between gap-3 ui-panel ${
-              editableItemNeedsReview(index) ? 'border-amber-400/45 bg-amber-500/8' : 'border-surface-800'
+              editableItemNeedsReview(index) ? 'border-amber-400/40 bg-amber-500/8' : 'border-surface-800'
             }`}
           >
             <div class="flex-1 min-w-0 pr-2">
               <div class="flex items-center gap-2 flex-wrap">
                 <p class="text-xs uppercase tracking-wide text-surface-300">Item {index + 1}</p>
                 {#if editableItemNeedsReview(index)}
-                  <span class="text-[11px] rounded-full border border-amber-400/50 bg-amber-500/20 px-2 py-0.5 text-amber-100">
-                    Review recommended
+                  <span class="text-[11px] rounded-full border border-amber-400/40 bg-amber-500/15 px-2 py-0.5 text-amber-200">
+                    Needs review
                   </span>
                 {/if}
               </div>
@@ -5775,7 +5671,7 @@ $: if (!summaryData) {
           </div>
           <div class="flex items-center justify-between gap-3">
             <div>
-              <p class="text-sm font-semibold">This receipt tax</p>
+              <p class="text-sm font-semibold">Tax</p>
               <p class="text-xs text-surface-300">
                 Tax % from effective subtotal:
                 {receiptSubtotalCents > 0 ? ` ${receiptTaxPercent.toFixed(2)}%` : ' --%'}
@@ -5801,7 +5697,7 @@ $: if (!summaryData) {
           </div>
           <div class="flex items-center justify-between gap-3">
             <div>
-              <p class="text-sm font-semibold">This receipt tip / gratuity</p>
+              <p class="text-sm font-semibold">Tip / gratuity</p>
               <p class="text-xs text-surface-300">
                 Tip % from pre-discount items subtotal:
                 {receiptGrossSubtotalCents > 0 ? ` ${receiptTipPercent.toFixed(2)}%` : ' --%'}
@@ -5830,170 +5726,24 @@ $: if (!summaryData) {
           </div>
           <div class="mt-3 flex items-start justify-between gap-3">
             <div>
-              <p class="text-sm font-semibold">This receipt subtotal</p>
+              <p class="text-sm font-semibold">Subtotal</p>
               <p class="text-xs text-surface-300">After discounts, before tax and tip.</p>
             </div>
             <div class="text-right text-sm">
               <div class="font-semibold">
                 {formatAmount(receiptSubtotalCents, receiptCurrencySelection)}
               </div>
-              <div class="text-xs text-surface-300">
-                Tip base: {formatAmount(receiptGrossSubtotalCents, receiptCurrencySelection)}
-              </div>
-            </div>
-          </div>
-          <div class="mt-3 flex items-start justify-between gap-3">
-            <div>
-              <p class="text-sm font-semibold">Projected total tax</p>
-              {#if !Number.isFinite(projectedTaxCents)}
-                <p class="text-xs text-surface-300">
-                  (Shown after import when bill currency matches receipt currency)
-                </p>
-              {:else if receiptIsAddon && baselineTaxCents > 0 && parsedTaxCents > 0}
-                <p class="text-xs text-surface-300">
-                  {formatAmount(baselineTaxCents)} + {formatAmount(parsedTaxCents, receiptCurrencySelection)} =
-                  {formatAmount(projectedTaxCents)}
-                </p>
-              {/if}
-            </div>
-            <div class="text-right text-sm">
-              <div class="font-semibold">
-                {#if Number.isFinite(projectedTaxCents)}
-                  {formatAmount(projectedTaxCents)}
-                {:else}
-                  --
-                {/if}
-              </div>
-              <div class="text-xs text-surface-300">
-                Total tax %:
-                {Number.isFinite(projectedTaxCents) && baselineSubtotalCents + receiptSubtotalCents > 0
-                  ? `${projectedTaxPercent.toFixed(2)}%`
-                  : '--%'}
-              </div>
-            </div>
-          </div>
-          <div class="mt-3 flex items-start justify-between gap-3">
-            <div>
-              <p class="text-sm font-semibold">Projected total tip / gratuity</p>
-              {#if !Number.isFinite(projectedTipCents)}
-                <p class="text-xs text-surface-300">
-                  (Shown after import when bill currency matches receipt currency)
-                </p>
-              {:else if receiptIsAddon && baselineTipCents > 0 && parsedTipCents > 0}
-                <p class="text-xs text-surface-300">
-                  {formatAmount(baselineTipCents)} + {formatAmount(parsedTipCents, receiptCurrencySelection)} =
-                  {formatAmount(projectedTipCents)}
-                </p>
-              {/if}
-            </div>
-            <div class="text-right text-sm">
-              <div class="font-semibold">
-                {#if Number.isFinite(projectedTipCents)}
-                  {formatAmount(projectedTipCents)}
-                {:else}
-                  --
-                {/if}
-              </div>
-              <div class="text-xs text-surface-300">
-                Total tip %:
-                {Number.isFinite(projectedTipCents) && baselineTipPercentBaseCents + receiptGrossSubtotalCents > 0
-                  ? `${projectedTipPercent.toFixed(2)}%`
-                  : '--%'}
-              </div>
-            </div>
-          </div>
-          <div class="mt-3 flex items-start justify-between gap-3">
-            <div>
-              <p class="text-sm font-semibold">Projected total bill-wide discount</p>
-              {#if !Number.isFinite(projectedBillDiscountCents)}
-                <p class="text-xs text-surface-300">
-                  (Shown after import when bill currency matches receipt currency)
-                </p>
-              {:else if parsedBillDiscountCents > 0}
-                <p class="text-xs text-surface-300">
-                  {formatAmount(baselineBillDiscountCents)} + {formatAmount(parsedBillDiscountCents, receiptCurrencySelection)} =
-                  {formatAmount(projectedBillDiscountCents)}
-                </p>
-              {/if}
-            </div>
-            <div class="text-right text-sm">
-              <div class="font-semibold">
-                {#if Number.isFinite(projectedBillDiscountCents)}
-                  {formatAmount(projectedBillDiscountCents)}
-                {:else}
-                  --
-                {/if}
-              </div>
-              <div class="text-xs text-surface-300">
-                Total discount %:
-                {Number.isFinite(projectedBillDiscountCents) && projectedDiscountPercentBaseCents > 0
-                  ? `${projectedBillDiscountPercent.toFixed(2)}%`
-                  : '--%'}
-              </div>
-            </div>
-          </div>
-          <div class="mt-3 flex items-start justify-between gap-3">
-            <div>
-              <p class="text-sm font-semibold">Projected total non-tip charges</p>
-              {#if !Number.isFinite(projectedBillChargesCents)}
-                <p class="text-xs text-surface-300">
-                  (Shown after import when bill currency matches receipt currency)
-                </p>
-              {:else if parsedBillChargesCents > 0}
-                <p class="text-xs text-surface-300">
-                  {formatAmount(baselineBillChargesCents)} + {formatAmount(parsedBillChargesCents, receiptCurrencySelection)} =
-                  {formatAmount(projectedBillChargesCents)}
-                </p>
-              {/if}
-            </div>
-            <div class="text-right text-sm">
-              <div class="font-semibold">
-                {#if Number.isFinite(projectedBillChargesCents)}
-                  {formatAmount(projectedBillChargesCents)}
-                {:else}
-                  --
-                {/if}
-              </div>
-              <div class="text-xs text-surface-300">
-                Total non-tip charges %:
-                {Number.isFinite(projectedBillChargesCents) && baselineSubtotalCents + receiptSubtotalCents > 0
-                  ? `${projectedBillChargesPercent.toFixed(2)}%`
-                  : '--%'}
-              </div>
             </div>
           </div>
           <div class="mt-4 rounded-xl border border-cyan-400/35 bg-cyan-500/10 p-3 ui-panel">
             <div class="flex items-start justify-between gap-3">
               <div>
-                <p class="text-sm font-semibold">Projected bill total after import</p>
-                {#if !Number.isFinite(projectedBillTotalAfterImportCents)}
-                  <p class="text-xs text-surface-300">
-                    Shown after import when bill currency matches receipt currency.
-                  </p>
-                {:else if receiptImportedTotalCents > 0}
-                  <p class="text-xs text-surface-300">
-                    {formatAmount(baselineBillTotalCents, receiptCurrencySelection)} + {formatAmount(receiptImportedTotalCents, receiptCurrencySelection)} =
-                    {formatAmount(projectedBillTotalAfterImportCents, receiptCurrencySelection)}
-                  </p>
-                {/if}
+                <p class="text-sm font-semibold">Receipt total</p>
               </div>
               <div class="text-right">
-                <div class="text-xs uppercase tracking-wide text-surface-300">After import</div>
                 <div class="text-lg font-semibold text-cyan-100">
-                  {#if Number.isFinite(projectedBillTotalAfterImportCents)}
-                    {formatAmount(projectedBillTotalAfterImportCents, receiptCurrencySelection)}
-                  {:else}
-                    --
-                  {/if}
+                  {formatAmount(receiptImportedTotalCents, receiptCurrencySelection)}
                 </div>
-                <div class="text-xs text-surface-300">
-                  This receipt: {formatAmount(receiptImportedTotalCents, receiptCurrencySelection)}
-                </div>
-                {#if Number.isFinite(projectedBillTotalBeforeTipCents)}
-                  <div class="text-xs text-surface-300 mt-1">
-                    Bill total before tip: {formatAmount(projectedBillTotalBeforeTipCents, receiptCurrencySelection)}
-                  </div>
-                {/if}
               </div>
             </div>
           </div>
@@ -6392,12 +6142,12 @@ $: if (!summaryData) {
           </div>
         </div>
         {#if items.some((it) => Object.values(it.assigned || {}).filter(Boolean).length === 0) || participants.some((p) => !p.finished)}
-          <div class="rounded-xl bg-warning-500/20 border border-warning-500/40 px-4 py-3 space-y-1 ui-panel">
+          <div class="rounded-xl bg-amber-500/15 border border-amber-400/40 px-4 py-3 space-y-1 ui-panel">
             {#if items.some((it) => Object.values(it.assigned || {}).filter(Boolean).length === 0)}
-              <p class="text-sm text-warning-200">Some items have not been assigned to anyone.</p>
+              <p class="text-sm text-amber-100">Some items have not been assigned to anyone.</p>
             {/if}
             {#if participants.some((p) => !p.finished)}
-              <p class="text-sm text-warning-200">Not everyone in the room is marked ready.</p>
+              <p class="text-sm text-amber-100">Not everyone in the room is marked ready.</p>
             {/if}
           </div>
         {/if}

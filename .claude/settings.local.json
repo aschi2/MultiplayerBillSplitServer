@@ -18,7 +18,11 @@
       "mcp__Claude_Preview__preview_start",
       "Bash(tar czf:*)",
       "Bash(gcloud compute:*)",
-      "Bash(curl -sI https://bill.thetravelbug.club/)"
+      "Bash(curl -sI https://thedivvi.com/)",
+      "Bash(curl -s https://thedivvi.com/api/health)",
+      "Bash(wc -l /Users/austin/codex-projects/Divvi/frontend/src/routes/room/[roomCode]/+page.svelte)",
+      "Bash(grep -n \"bg-amber\\\\|border-amber\\\\|bg-warning\\\\|border-warning\" /Users/austin/codex-projects/Divvi/frontend/src/routes/room/[roomCode]/+page.svelte)",
+      "Bash(grep -n \"amber\\\\|warning\" /Users/austin/codex-projects/Divvi/frontend/src/routes/room/[roomCode]/+page.svelte)"
     ]
   }
 }

@@ -1,8 +1,8 @@
-# Deployment to GCP VM (bill.thetravelbug.club)
+# Deployment to GCP VM (thedivvi.com)
 
 ## Prereqs
 - gcloud CLI authenticated to project `disney-bill-splitter`
-- Cloudflare DNS: A record `bill.thetravelbug.club` -> static IP `35.188.115.203`, proxy **ON**, SSL mode **Full** (not Strict)
+- Cloudflare DNS: A record `thedivvi.com` -> static IP `35.188.115.203`, proxy **ON**, SSL mode **Full** (not Strict)
 - VM: `bill-bugs` (e2-small, us-central1-a) with Docker + docker-compose installed
 - Static IP: `bill-bugs-ip`
 
@@ -25,10 +25,10 @@ sudo docker-compose -f docker-compose.prod.yml up -d --build
 ## Environment (.env on VM)
 Already present on the VM. Key values:
 - OPENAI_API_KEY=<your key>
-- DOMAIN=bill.thetravelbug.club
+- DOMAIN=thedivvi.com
 - TLS_MODE=local (Cloudflare Full mode)
-- PUBLIC_BASE_URL=https://bill.thetravelbug.club
-- COOKIE_SECURE=true, CORS_ALLOWED_ORIGINS=https://bill.thetravelbug.club
+- PUBLIC_BASE_URL=https://thedivvi.com
+- COOKIE_SECURE=true, CORS_ALLOWED_ORIGINS=https://thedivvi.com
 
 If you ever need to recreate `.env` on the VM:
 ```bash
@@ -38,7 +38,7 @@ JOIN_KEY=$(openssl rand -hex 32)
 CSRF_SECRET=$(openssl rand -hex 32)
 cat > .env <<EOF
 NODE_ENV=production
-PUBLIC_BASE_URL=https://bill.thetravelbug.club
+PUBLIC_BASE_URL=https://thedivvi.com
 ROOM_TTL_SECONDS=86400
 
 # Backend
@@ -48,17 +48,17 @@ SESSION_SECRET=$SESSION_SECRET
 JOIN_TOKEN_SIGNING_KEY=$JOIN_KEY
 CSRF_SECRET=$CSRF_SECRET
 COOKIE_SECURE=true
-COOKIE_DOMAIN=bill.thetravelbug.club
-CORS_ALLOWED_ORIGINS=https://bill.thetravelbug.club
+COOKIE_DOMAIN=thedivvi.com
+CORS_ALLOWED_ORIGINS=https://thedivvi.com
 OPENAI_API_KEY=$OPENAI_KEY
-PUBLIC_BASE_URL=https://bill.thetravelbug.club
+PUBLIC_BASE_URL=https://thedivvi.com
 
 # Frontend
-VITE_API_BASE_URL=https://bill.thetravelbug.club/api
-VITE_WS_BASE_URL=wss://bill.thetravelbug.club/ws
+VITE_API_BASE_URL=https://thedivvi.com/api
+VITE_WS_BASE_URL=wss://thedivvi.com/ws
 
 # Proxy / TLS
-DOMAIN=bill.thetravelbug.club
+DOMAIN=thedivvi.com
 LETSENCRYPT_EMAIL=austinchi2@yahoo.com
 TLS_MODE=local
 EOF

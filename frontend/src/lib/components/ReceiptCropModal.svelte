@@ -48,6 +48,8 @@
     }
     loadedFileKey = '';
     cropError = null;
+    fineRotation = 0;
+    coarseRotation = 0;
   };
 
   const ensureCropperCtor = async () => {
@@ -116,12 +118,24 @@
     dispatch('cancel');
   };
 
+  let fineRotation = 0;
+  let coarseRotation = 0;
+  $: totalRotation = coarseRotation + fineRotation;
+
   const rotate = (degrees: number) => {
-    cropper?.rotate(degrees);
+    coarseRotation += degrees;
+    cropper?.rotateTo(coarseRotation + fineRotation);
+  };
+
+  const setFineRotation = (degrees: number) => {
+    fineRotation = degrees;
+    cropper?.rotateTo(coarseRotation + fineRotation);
   };
 
   const reset = () => {
     cropper?.reset();
+    fineRotation = 0;
+    coarseRotation = 0;
   };
 
   const confirmCurrentCrop = async (useOriginal = false) => {
@@ -194,16 +208,33 @@
         </div>
       {/if}
 
-      <div class="flex flex-wrap gap-2">
-        <button class="action-btn action-btn-surface" type="button" on:click={() => rotate(-90)} disabled={!cropperReady || busy || cropWorking}>
-          Rotate left
-        </button>
-        <button class="action-btn action-btn-surface" type="button" on:click={() => rotate(90)} disabled={!cropperReady || busy || cropWorking}>
-          Rotate right
-        </button>
-        <button class="action-btn action-btn-surface" type="button" on:click={reset} disabled={!cropperReady || busy || cropWorking}>
-          Reset
-        </button>
+      <div class="space-y-2">
+        <div class="flex flex-wrap gap-2">
+          <button class="action-btn action-btn-surface" type="button" on:click={() => rotate(-90)} disabled={!cropperReady || busy || cropWorking}>
+            Rotate left
+          </button>
+          <button class="action-btn action-btn-surface" type="button" on:click={() => rotate(90)} disabled={!cropperReady || busy || cropWorking}>
+            Rotate right
+          </button>
+          <button class="action-btn action-btn-surface" type="button" on:click={reset} disabled={!cropperReady || busy || cropWorking}>
+            Reset
+          </button>
+        </div>
+        {#if cropperReady}
+          <div class="flex items-center gap-3">
+            <input
+              type="range"
+              min="-45"
+              max="45"
+              step="0.5"
+              value={fineRotation}
+              on:input={(e) => setFineRotation(Number(e.currentTarget.value))}
+              disabled={busy || cropWorking}
+              class="rotation-slider flex-1"
+            />
+            <span class="text-xs text-surface-300 tabular-nums w-12 text-right shrink-0">{totalRotation.toFixed(1)}&deg;</span>
+          </div>
+        {/if}
       </div>
 
       <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
@@ -217,3 +248,35 @@
     </div>
   </div>
 {/if}
+
+<style>
+  .rotation-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.12);
+    outline: none;
+  }
+  .rotation-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgb(45, 212, 191);
+    cursor: pointer;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+  }
+  .rotation-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgb(45, 212, 191);
+    cursor: pointer;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+  }
+  .rotation-slider:disabled {
+    opacity: 0.4;
+  }
+</style>
