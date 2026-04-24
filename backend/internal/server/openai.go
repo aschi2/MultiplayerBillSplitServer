@@ -540,17 +540,21 @@ func buildGeminiRequest(image []byte, contentType, model string, temperature flo
 		"response_mime_type": "application/json",
 	}
 	if isGeminiRetryModel(model) {
-		generationConfig["response_schema"] = geminiReceiptResponseSchema()
+		// No response_schema on retry: nullable price fields combined with
+		// MEDIUM thinking caused the model to output null prices when it
+		// wasn't 100% confident, which decodes to $0.00 in the UI. Free-form
+		// JSON + the strong prompt + cleanModelJSON parses reliably and
+		// preserves prices.
 		generationConfig["thinkingConfig"] = map[string]any{
 			"thinkingLevel": "MEDIUM",
 		}
 	} else {
-		// Dynamic thinking: model spends minimal tokens on simple receipts
-		// and ramps up reasoning for harder ones. Goal is for flash-lite to
-		// handle ~95% of receipts on the first parse without needing the
-		// retry path.
+		// Fixed thinking budget so flash-lite gets consistent reasoning
+		// headroom on every receipt instead of relying on the model's own
+		// complexity judgment (which can be inconsistent and miss items).
+		// Goal: flash-lite handles ~95% of receipts on first parse.
 		generationConfig["thinkingConfig"] = map[string]any{
-			"thinkingBudget": -1,
+			"thinkingBudget": 4096,
 		}
 	}
 	body := map[string]any{
@@ -636,7 +640,7 @@ func geminiReceiptPrompts(model, supported string) (string, string) {
 		"Each addon should include name, price_cents, and raw_text.",
 	}, " ")
 	if isGeminiRetryModel(model) {
-		userPrompt += " Match the response schema exactly."
+		userPrompt += " Always populate line_price_cents and unit_price_cents with integer cent values when a price is visible on the row; null is only acceptable when there is genuinely no readable price."
 	}
 	return systemPrompt, userPrompt
 }
