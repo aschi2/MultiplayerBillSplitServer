@@ -23,8 +23,13 @@ const (
 	geminiModelRetryFallback = "gemini-2.5-flash-lite"
 
 	// Tuned from live hard/simple receipt runs.
+	// Retry uses thinkingLevel=LOW which consumes some of the output budget for
+	// reasoning, AND a strict response schema. The cap must accommodate both
+	// the thinking and the full JSON for long receipts; the previous 4000 cap
+	// frequently truncated mid-JSON on receipts with many items, especially
+	// when fallback to flash-lite kicked in.
 	geminiReceiptMaxOutputTokensStandard = 6800
-	geminiReceiptMaxOutputTokensRetry    = 4000
+	geminiReceiptMaxOutputTokensRetry    = 12000
 	geminiReceiptTemperatureStandard     = 0.0
 	geminiReceiptTemperatureRetry        = 0.0
 )
