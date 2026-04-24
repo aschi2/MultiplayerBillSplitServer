@@ -372,10 +372,16 @@ func (s *Server) handleReceiptParse(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Keep a single model call, but normalize orientation first so dense journal-style
-	// screenshots are sent in the most readable rotation.
-	if normalizedData, normalizedType, rotated := normalizeReceiptImageOrientation(data, contentType); rotated {
-		data = normalizedData
-		contentType = normalizedType
+	// screenshots are sent in the most readable rotation. Skip when the client signals
+	// the user already cropped/rotated -- otherwise the heuristic crop can strip
+	// content the user deliberately included.
+	userCropped := strings.EqualFold(strings.TrimSpace(r.FormValue("user_cropped")), "1") ||
+		strings.EqualFold(strings.TrimSpace(r.FormValue("user_cropped")), "true")
+	if !userCropped {
+		if normalizedData, normalizedType, rotated := normalizeReceiptImageOrientation(data, contentType); rotated {
+			data = normalizedData
+			contentType = normalizedType
+		}
 	}
 	parseMode := strings.ToLower(strings.TrimSpace(r.FormValue("parse_mode")))
 	preferHighAccuracy := parseMode == "accurate" || parseMode == "retry" || parseMode == "high"

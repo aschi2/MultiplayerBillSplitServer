@@ -10,7 +10,7 @@
 
   const dispatch = createEventDispatcher<{
     cancel: void;
-    confirm: { file: File };
+    confirm: { file: File; cropped: boolean };
   }>();
 
   let imageEl: HTMLImageElement | null = null;
@@ -161,7 +161,7 @@
         });
       }
       cleanupPreview();
-      dispatch('confirm', { file: nextFile });
+      dispatch('confirm', { file: nextFile, cropped: !useOriginal });
     } catch (err) {
       cropError = err instanceof Error ? err.message : 'Failed to prepare receipt image.';
     } finally {

@@ -52,6 +52,7 @@
   let receiptRetryStatus: string | null = null;
   let receiptFileInputEl: HTMLInputElement | null = null;
   let receiptLastUploadedFile: File | null = null;
+  let receiptLastUploadedCropped = false;
   let showReceiptCropModal = false;
   let receiptCropSourceFile: File | null = null;
   let parsedTaxInput = '';
@@ -3053,9 +3054,13 @@ $: if (!summaryData) {
     receiptRetryStatus = 'Using try-again parsed result.';
   };
 
-  const parseReceiptFile = async (sourceFile: File, options: { escalate?: boolean } = {}) => {
+  const parseReceiptFile = async (
+    sourceFile: File,
+    options: { escalate?: boolean; userCropped?: boolean } = {}
+  ) => {
     if (!sourceFile) return;
     const escalate = options.escalate === true;
+    const userCropped = options.userCropped === true;
     if (!escalate) {
       clearReceiptRetryState();
     } else {
@@ -3075,10 +3080,14 @@ $: if (!summaryData) {
     try {
       const file = await normalizeReceiptImage(sourceFile);
       receiptLastUploadedFile = file;
+      receiptLastUploadedCropped = userCropped;
       const form = new FormData();
       form.append('file', file);
       if (escalate) {
         form.append('parse_mode', 'accurate');
+      }
+      if (userCropped) {
+        form.append('user_cropped', '1');
       }
       const res = await fetch(`${apiBase}/receipt/parse`, { method: 'POST', body: form });
       if (!res.ok) {
@@ -3242,12 +3251,13 @@ $: if (!summaryData) {
     receiptCropSourceFile = null;
   };
 
-  const confirmReceiptCrop = async (event: CustomEvent<{ file: File }>) => {
+  const confirmReceiptCrop = async (event: CustomEvent<{ file: File; cropped: boolean }>) => {
     const nextFile = event.detail?.file;
+    const cropped = event.detail?.cropped === true;
     showReceiptCropModal = false;
     receiptCropSourceFile = null;
     if (!nextFile) return;
-    await parseReceiptFile(nextFile, { escalate: false });
+    await parseReceiptFile(nextFile, { escalate: false, userCropped: cropped });
   };
 
   const submitReceipt = async (event: Event) => {
@@ -3281,7 +3291,10 @@ $: if (!summaryData) {
       }))
     });
     receiptRetryConsumed = true;
-    await parseReceiptFile(receiptLastUploadedFile, { escalate: true });
+    await parseReceiptFile(receiptLastUploadedFile, {
+      escalate: true,
+      userCropped: receiptLastUploadedCropped
+    });
     if (receiptError) {
       const errorMessage = receiptError;
       receiptOriginalSnapshot = beforeSnapshot;
@@ -5320,296 +5333,278 @@ $: if (!summaryData) {
         {#each receiptVisibleIndices as index (index)}
           <div
             id={`receipt-review-item-${index}`}
-            class={`glass-card room-item-card rounded-2xl p-4 flex items-start justify-between gap-3 ui-panel ${
+            class={`glass-card room-item-card rounded-2xl p-4 ui-panel ${
               editableItemNeedsReview(index) ? 'border-amber-400/40 bg-amber-500/8' : 'border-surface-800'
             }`}
           >
-            <div class="flex-1 min-w-0 pr-2">
-              <div class="flex items-center gap-2 flex-wrap">
-                <p class="text-xs uppercase tracking-wide text-surface-300">Item {index + 1}</p>
-                {#if editableItemNeedsReview(index)}
-                  <span class="text-[11px] rounded-full border border-amber-400/40 bg-amber-500/15 px-2 py-0.5 text-amber-200">
-                    Needs review
-                  </span>
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex-1 min-w-0 pr-2">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <p class="text-xs uppercase tracking-wide text-surface-300">Item {index + 1}</p>
+                  {#if editableItemNeedsReview(index)}
+                    <span class="text-[11px] rounded-full border border-amber-400/40 bg-amber-500/15 px-2 py-0.5 text-amber-200">
+                      Needs review
+                    </span>
+                  {/if}
+                </div>
+                <p
+                  class="mt-1 font-semibold text-white leading-tight break-words truncate"
+                  style="font-size: clamp(13px, 4vw, 16px);"
+                  title={editableItemDisplayParts(editableItems[index]).baseName}
+                >
+                  {editableItemDisplayParts(editableItems[index]).baseName}
+                </p>
+                {#if editableItemDisplayParts(editableItems[index]).addons.length > 0}
+                  <div class="mt-1 flex flex-wrap gap-1">
+                    {#each editableItemDisplayParts(editableItems[index]).addons as addon}
+                      <span class="text-[11px] rounded-full border border-white/15 bg-white/5 px-2 py-0.5 text-surface-300">
+                        + {addon.name}
+                        {#if addon.price_cents > 0}
+                          · {formatAmount(addon.price_cents, receiptCurrencySelection)}
+                        {/if}
+                      </span>
+                    {/each}
+                  </div>
+                {/if}
+                <p class="mt-1 text-sm text-surface-200 whitespace-nowrap">
+                  {formatAmount(pricingPreviewFromEditable(editableItems[index]).grossTotal, receiptCurrencySelection)}
+                </p>
+                <p class="text-xs text-surface-300">
+                  {#if pricingPreviewFromEditable(editableItems[index]).unit > 0}
+                    {pricingPreviewFromEditable(editableItems[index]).qty} × {formatAmount(pricingPreviewFromEditable(editableItems[index]).unit, receiptCurrencySelection)}
+                  {:else}
+                    Qty {pricingPreviewFromEditable(editableItems[index]).qty}
+                  {/if}
+                  {#if pricingPreviewFromEditable(editableItems[index]).addonPerItem > 0}
+                    · Add-ons {formatAmount(pricingPreviewFromEditable(editableItems[index]).addonPerItem, receiptCurrencySelection)} each
+                  {/if}
+                </p>
+                {#if discountedUnitAndNetFromEditable(editableItems[index]).netTotal < pricingPreviewFromEditable(editableItems[index]).grossTotal}
+                  <p class="text-xs text-surface-300">
+                    Net after discount: {formatAmount(discountedUnitAndNetFromEditable(editableItems[index]).netTotal, receiptCurrencySelection)}
+                  </p>
+                {/if}
+                {#if editableItemReviewAt(index).reasons.length > 0}
+                  <p class="mt-1 text-xs text-amber-200">
+                    {editableItemReviewAt(index).reasons.join(' • ')}
+                  </p>
                 {/if}
               </div>
-              <p
-                class="mt-1 font-semibold text-white leading-tight break-words truncate"
-                style="font-size: clamp(13px, 4vw, 16px);"
-                title={editableItemDisplayParts(editableItems[index]).baseName}
-              >
-                {editableItemDisplayParts(editableItems[index]).baseName}
-              </p>
-              {#if editableItemDisplayParts(editableItems[index]).addons.length > 0}
-                <div class="mt-1 flex flex-wrap gap-1">
-                  {#each editableItemDisplayParts(editableItems[index]).addons as addon}
-                    <span class="text-[11px] rounded-full border border-white/15 bg-white/5 px-2 py-0.5 text-surface-300">
-                      + {addon.name}
-                      {#if addon.price_cents > 0}
-                        · {formatAmount(addon.price_cents, receiptCurrencySelection)}
-                      {/if}
-                    </span>
-                  {/each}
+              <div class="flex flex-col gap-2 items-end flex-shrink-0">
+                <button
+                  class={`action-btn action-btn-compact ${
+                    receiptEditingIndex === index ? 'action-btn-primary' : 'action-btn-surface'
+                  }`}
+                  type="button"
+                  on:click={() => {
+                    if (receiptEditingIndex === index) {
+                      closeReceiptItemEditor();
+                    } else {
+                      openReceiptItemEditor(index);
+                    }
+                  }}
+                >
+                  {receiptEditingIndex === index ? 'Done' : 'Edit'}
+                </button>
+              </div>
+            </div>
+            {#if receiptEditingIndex === index && editableItems[index]}
+              <div class="mt-4 pt-4 border-t border-white/10 space-y-3">
+                <ItemEditorFields
+                  name={editableItems[index].name}
+                  nameInput={(value) => setEditableItemField(index, 'name', value)}
+                  namePlaceholder="Item name"
+                  showQuantity={true}
+                  allowTotalToggle={true}
+                  quantity={editableItems[index].quantity}
+                  unitPrice={editableItems[index].unitPrice}
+                  linePrice={editableItems[index].linePrice}
+                  discountCents={editableItems[index].discountCents}
+                  discountPercent={editableItems[index].discountPercent}
+                  discountMode={editableItemDiscountMode(editableItems[index])}
+                  totalInputMode={editableItemTotalInputMode(editableItems[index])}
+                  currencyLabel={symbolFor(receiptCurrencySelection) || receiptCurrencySelection}
+                  priceStep={1 / factorFor(receiptCurrencySelection)}
+                  addonCount={(editableItems[index].addons || []).length}
+                  addonTotalPerItemLabel={formatAmount(editableItemAddonTotalCents(index), receiptCurrencySelection)}
+                  pricingTotalEquation={`${pricingPreviewFromEditable(editableItems[index]).qty} × ${formatAmount(pricingPreviewFromEditable(editableItems[index]).unit, receiptCurrencySelection)} = ${formatAmount(pricingPreviewFromEditable(editableItems[index]).baseTotal, receiptCurrencySelection)}`}
+                  pricingAddonEquation={`${formatAmount(pricingPreviewFromEditable(editableItems[index]).addonPerItem, receiptCurrencySelection)} × ${pricingPreviewFromEditable(editableItems[index]).qty} = ${formatAmount(pricingPreviewFromEditable(editableItems[index]).addonTotal, receiptCurrencySelection)}`}
+                  showAddonEquation={pricingPreviewFromEditable(editableItems[index]).addonTotal > 0}
+                  netUnitLabel={formatAmount(discountedUnitAndNetFromEditable(editableItems[index]).netUnit, receiptCurrencySelection)}
+                  netTotalLabel={formatAmount(discountedUnitAndNetFromEditable(editableItems[index]).netTotal, receiptCurrencySelection)}
+                  highlightName={editableItemReviewAt(index).name}
+                  highlightQuantity={editableItemReviewAt(index).quantity}
+                  highlightUnitPrice={editableItemReviewAt(index).unitPrice}
+                  highlightTotal={editableItemReviewAt(index).linePrice}
+                  highlightDiscount={editableItemReviewAt(index).discount}
+                  highlightAddons={editableItemReviewAt(index).addons}
+                  totalModeToggle={() => toggleEditableItemTotalInputMode(index)}
+                  quantityInput={(value) => {
+                    setEditableItemField(index, 'quantity', value);
+                    queueMicrotask(() => recalcDerived(index, 'quantity'));
+                  }}
+                  unitPriceInput={(value) => {
+                    setEditableItemField(index, 'unitPrice', value);
+                    queueMicrotask(() => recalcDerived(index, 'unitPrice'));
+                  }}
+                  linePriceInput={(value) => {
+                    setEditableItemField(index, 'linePrice', value);
+                    queueMicrotask(() => recalcDerived(index, 'linePrice'));
+                  }}
+                  discountModeSelect={(mode) => setEditableItemDiscountMode(index, mode)}
+                  discountValueInput={(value) => {
+                    if (editableItemDiscountMode(editableItems[index]) === 'percent') {
+                      setEditableItemField(index, 'discountPercent', value);
+                    } else {
+                      setEditableItemField(index, 'discountCents', value);
+                    }
+                    queueMicrotask(() => recalcDerived(index, 'discount'));
+                  }}
+                  manageAddons={() => openReceiptItemAddonsModal(index)}
+                />
+                <div class="flex justify-end gap-2 flex-wrap">
+                  <button
+                    class="action-btn action-btn-surface action-btn-compact"
+                    on:click={() => openReceiptAttachModal(index)}
+                    type="button"
+                    disabled={editableItems.length < 2}
+                    title="Attach this item under another item as an add-on"
+                  >
+                    {showReceiptAttachModal && receiptAttachSourceIndex === index ? 'Close attach' : 'Attach as add-on'}
+                  </button>
+                  <button
+                    class="action-btn action-btn-danger action-btn-compact"
+                    on:click={() => removeEditableItem(index, { rebalanceTaxAndTip: true })}
+                    type="button"
+                  >
+                    <svg class="inline-block align-middle" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" style="color:#ef4444">
+                      <path d="M3 6h18" />
+                      <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                      <path d="M10 11v6" />
+                      <path d="M14 11v6" />
+                    </svg>
+                    <span class="ml-1">Remove</span>
+                  </button>
                 </div>
-              {/if}
-              <p class="mt-1 text-sm text-surface-200 whitespace-nowrap">
-                {formatAmount(pricingPreviewFromEditable(editableItems[index]).grossTotal, receiptCurrencySelection)}
-              </p>
-              <p class="text-xs text-surface-300">
-                {#if pricingPreviewFromEditable(editableItems[index]).unit > 0}
-                  {pricingPreviewFromEditable(editableItems[index]).qty} × {formatAmount(pricingPreviewFromEditable(editableItems[index]).unit, receiptCurrencySelection)}
-                {:else}
-                  Qty {pricingPreviewFromEditable(editableItems[index]).qty}
+                {#if showReceiptAttachModal && receiptAttachSourceIndex === index}
+                  <div class="rounded-xl border border-cyan-400/40 bg-cyan-500/10 p-3 space-y-2 ui-panel">
+                    <p class="text-xs text-cyan-100">
+                      Choose the parent item for "{editableItems[index].name || `Item ${index + 1}`}".
+                    </p>
+                    <div class="space-y-2 max-h-52 overflow-y-auto pr-1">
+                      {#each editableItems as item, targetIndex}
+                        {#if targetIndex !== index}
+                          <button
+                            class="w-full text-left rounded-xl border border-surface-700/80 bg-surface-900/55 px-3 py-2 modal-list-row"
+                            type="button"
+                            on:click={() => attachEditableItemAsAddon(index, targetIndex)}
+                          >
+                            <div class="flex items-center justify-between gap-3">
+                              <div class="min-w-0">
+                                <div class="font-medium text-white truncate">{item.name || `Item ${targetIndex + 1}`}</div>
+                                <div class="text-xs text-surface-300">
+                                  Current total: {formatAmount(pricingPreviewFromEditable(item).grossTotal, receiptCurrencySelection)}
+                                </div>
+                              </div>
+                              <span class="text-xs rounded-lg border border-cyan-400/45 bg-cyan-500/15 px-2 py-1 text-cyan-100">
+                                Attach
+                              </span>
+                            </div>
+                          </button>
+                        {/if}
+                      {/each}
+                    </div>
+                    <button class="btn btn-outline w-full" type="button" on:click={closeReceiptAttachModal}>
+                      Cancel
+                    </button>
+                  </div>
                 {/if}
-                {#if pricingPreviewFromEditable(editableItems[index]).addonPerItem > 0}
-                  · Add-ons {formatAmount(pricingPreviewFromEditable(editableItems[index]).addonPerItem, receiptCurrencySelection)} each
+                {#if showReceiptItemAddonsModal && receiptItemAddonsIndex === index}
+                  <div class="rounded-xl border border-surface-700/80 bg-surface-900/55 p-3 space-y-3 ui-panel">
+                    <p class="text-xs text-surface-300">
+                      Add-on costs are per item and rolled into this item total.
+                    </p>
+                    <div class="space-y-2 max-h-56 overflow-y-auto pr-1">
+                      {#if (editableItems[index].addons || []).length === 0}
+                        <div class="text-xs text-surface-400">
+                          No add-ons yet. Add one below if needed.
+                        </div>
+                      {/if}
+                      {#each editableItems[index].addons || [] as addon, addonIdx}
+                        <div class="rounded-xl border border-surface-700/80 bg-surface-900/55 p-2 modal-list-row space-y-2">
+                          <div class="grid grid-cols-[1fr_7rem] gap-2 items-center">
+                            <input
+                              class="input w-full"
+                              value={addon.name}
+                              placeholder="Add-on"
+                              on:input={(event) => updateEditableItemAddon(index, addonIdx, 'name', (event.target as HTMLInputElement).value)}
+                            />
+                            <input
+                              class="input w-full text-right"
+                              value={addon.price}
+                              placeholder={zeroPlaceholderByCurrency(receiptCurrencySelection)}
+                              inputmode="decimal"
+                              type="number"
+                              min="0"
+                              step={1 / factorFor(receiptCurrencySelection)}
+                              on:input={(event) => updateEditableItemAddon(index, addonIdx, 'price', (event.target as HTMLInputElement).value)}
+                            />
+                          </div>
+                          <div class="flex items-center justify-end gap-2 flex-wrap">
+                            <button
+                              class="action-btn action-btn-surface action-btn-compact"
+                              type="button"
+                              title="Create a standalone item from this add-on"
+                              on:click={() => promoteEditableItemAddonToItem(index, addonIdx)}
+                            >
+                              Create item
+                            </button>
+                            <button
+                              class="action-btn action-btn-danger action-btn-compact"
+                              type="button"
+                              title="Remove add-on"
+                              on:click={() => removeEditableItemAddon(index, addonIdx)}
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      {/each}
+                    </div>
+                    <button class="btn btn-outline w-full" type="button" on:click={() => addEditableItemAddon(index)}>
+                      Add Add-on
+                    </button>
+                    <div class="rounded-lg border border-surface-700 bg-surface-900/60 px-3 py-2 text-sm flex items-center justify-between ui-inline-metric">
+                      <span class="text-surface-300">Add-on total per item</span>
+                      <span class="font-semibold text-white">
+                        {formatAmount(editableItemAddonTotalCents(index), receiptCurrencySelection)}
+                      </span>
+                    </div>
+                    <div class="rounded-lg border border-surface-700 bg-surface-900/60 px-3 py-2 text-sm flex items-center justify-between ui-inline-metric">
+                      <span class="text-surface-300">
+                        Add-on total ({Math.max(1, Number.parseInt(editableItems[index].quantity || '1', 10) || 1)} item{Math.max(1, Number.parseInt(editableItems[index].quantity || '1', 10) || 1) === 1 ? '' : 's'})
+                      </span>
+                      <span class="font-semibold text-white">
+                        {formatAmount(editableItemAddonExtendedTotalCents(index), receiptCurrencySelection)}
+                      </span>
+                    </div>
+                    <button
+                      class="btn btn-outline w-full"
+                      type="button"
+                      on:click={() => {
+                        showReceiptItemAddonsModal = false;
+                        receiptItemAddonsIndex = null;
+                      }}
+                    >
+                      Close add-ons
+                    </button>
+                  </div>
                 {/if}
-              </p>
-              {#if discountedUnitAndNetFromEditable(editableItems[index]).netTotal < pricingPreviewFromEditable(editableItems[index]).grossTotal}
-                <p class="text-xs text-surface-300">
-                  Net after discount: {formatAmount(discountedUnitAndNetFromEditable(editableItems[index]).netTotal, receiptCurrencySelection)}
-                </p>
-              {/if}
-              {#if editableItemReviewAt(index).reasons.length > 0}
-                <p class="mt-1 text-xs text-amber-200">
-                  {editableItemReviewAt(index).reasons.join(' • ')}
-                </p>
-              {/if}
-            </div>
-            <div class="flex flex-col gap-2 items-end flex-shrink-0">
-              <button
-                class="action-btn action-btn-surface action-btn-compact"
-                type="button"
-                on:click={() => openReceiptItemEditor(index)}
-              >
-                Edit
-              </button>
-            </div>
+              </div>
+            {/if}
           </div>
         {/each}
-        {#if showReceiptItemEditModal && receiptEditingIndex !== null && editableItems[receiptEditingIndex]}
-          <div class="modal-scrim">
-            <div class="glass-card bottom-sheet ui-bottom-sheet max-h-[82vh] overflow-y-auto">
-              <h3 class="text-lg font-semibold modal-title">Edit imported item</h3>
-              <p class="text-xs text-surface-300 modal-subtitle">
-                Adjust this line before import. Changes stay in receipt review until you import.
-              </p>
-              <ItemEditorFields
-                name={editableItems[receiptEditingIndex].name}
-                nameInput={(value) => setEditableItemField(receiptEditingIndex!, 'name', value)}
-                namePlaceholder="Item name"
-                showQuantity={true}
-                allowTotalToggle={true}
-                quantity={editableItems[receiptEditingIndex].quantity}
-                unitPrice={editableItems[receiptEditingIndex].unitPrice}
-                linePrice={editableItems[receiptEditingIndex].linePrice}
-                discountCents={editableItems[receiptEditingIndex].discountCents}
-                discountPercent={editableItems[receiptEditingIndex].discountPercent}
-                discountMode={editableItemDiscountMode(editableItems[receiptEditingIndex])}
-                totalInputMode={editableItemTotalInputMode(editableItems[receiptEditingIndex])}
-                currencyLabel={symbolFor(receiptCurrencySelection) || receiptCurrencySelection}
-                priceStep={1 / factorFor(receiptCurrencySelection)}
-                addonCount={(editableItems[receiptEditingIndex].addons || []).length}
-                addonTotalPerItemLabel={formatAmount(editableItemAddonTotalCents(receiptEditingIndex!), receiptCurrencySelection)}
-                pricingTotalEquation={`${pricingPreviewFromEditable(editableItems[receiptEditingIndex]).qty} × ${formatAmount(pricingPreviewFromEditable(editableItems[receiptEditingIndex]).unit, receiptCurrencySelection)} = ${formatAmount(pricingPreviewFromEditable(editableItems[receiptEditingIndex]).baseTotal, receiptCurrencySelection)}`}
-                pricingAddonEquation={`${formatAmount(pricingPreviewFromEditable(editableItems[receiptEditingIndex]).addonPerItem, receiptCurrencySelection)} × ${pricingPreviewFromEditable(editableItems[receiptEditingIndex]).qty} = ${formatAmount(pricingPreviewFromEditable(editableItems[receiptEditingIndex]).addonTotal, receiptCurrencySelection)}`}
-                showAddonEquation={pricingPreviewFromEditable(editableItems[receiptEditingIndex]).addonTotal > 0}
-                netUnitLabel={formatAmount(discountedUnitAndNetFromEditable(editableItems[receiptEditingIndex]).netUnit, receiptCurrencySelection)}
-                netTotalLabel={formatAmount(discountedUnitAndNetFromEditable(editableItems[receiptEditingIndex]).netTotal, receiptCurrencySelection)}
-                highlightName={editableItemReviewAt(receiptEditingIndex!).name}
-                highlightQuantity={editableItemReviewAt(receiptEditingIndex!).quantity}
-                highlightUnitPrice={editableItemReviewAt(receiptEditingIndex!).unitPrice}
-                highlightTotal={editableItemReviewAt(receiptEditingIndex!).linePrice}
-                highlightDiscount={editableItemReviewAt(receiptEditingIndex!).discount}
-                highlightAddons={editableItemReviewAt(receiptEditingIndex!).addons}
-                totalModeToggle={() => toggleEditableItemTotalInputMode(receiptEditingIndex!)}
-                quantityInput={(value) => {
-                  setEditableItemField(receiptEditingIndex!, 'quantity', value);
-                  queueMicrotask(() => recalcDerived(receiptEditingIndex!, 'quantity'));
-                }}
-                unitPriceInput={(value) => {
-                  setEditableItemField(receiptEditingIndex!, 'unitPrice', value);
-                  queueMicrotask(() => recalcDerived(receiptEditingIndex!, 'unitPrice'));
-                }}
-                linePriceInput={(value) => {
-                  setEditableItemField(receiptEditingIndex!, 'linePrice', value);
-                  queueMicrotask(() => recalcDerived(receiptEditingIndex!, 'linePrice'));
-                }}
-                discountModeSelect={(mode) => setEditableItemDiscountMode(receiptEditingIndex!, mode)}
-                discountValueInput={(value) => {
-                  if (editableItemDiscountMode(editableItems[receiptEditingIndex]) === 'percent') {
-                    setEditableItemField(receiptEditingIndex!, 'discountPercent', value);
-                  } else {
-                    setEditableItemField(receiptEditingIndex!, 'discountCents', value);
-                  }
-                  queueMicrotask(() => recalcDerived(receiptEditingIndex!, 'discount'));
-                }}
-                manageAddons={() => openReceiptItemAddonsModal(receiptEditingIndex!)}
-              />
-              {#if editableItemReviewAt(receiptEditingIndex!).reasons.length > 0}
-                <p class="mt-3 text-xs text-amber-200">
-                  {editableItemReviewAt(receiptEditingIndex!).reasons.join(' • ')}
-                </p>
-              {/if}
-              <div class="mt-3 flex justify-end gap-2 flex-wrap">
-                <button
-                  class="action-btn action-btn-surface action-btn-compact"
-                  on:click={() => openReceiptAttachModal(receiptEditingIndex!)}
-                  type="button"
-                  disabled={editableItems.length < 2}
-                  title="Attach this item under another item as an add-on"
-                >
-                  {showReceiptAttachModal && receiptAttachSourceIndex === receiptEditingIndex ? 'Close attach' : 'Attach as add-on'}
-                </button>
-                <button
-                  class="action-btn action-btn-danger action-btn-compact"
-                  on:click={() => removeEditableItem(receiptEditingIndex!, { rebalanceTaxAndTip: true })}
-                  type="button"
-                >
-                  <svg class="inline-block align-middle" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" style="color:#ef4444">
-                    <path d="M3 6h18" />
-                    <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-                    <path d="M10 11v6" />
-                    <path d="M14 11v6" />
-                  </svg>
-                  <span class="ml-1">Remove</span>
-                </button>
-              </div>
-              {#if showReceiptAttachModal && receiptAttachSourceIndex === receiptEditingIndex}
-              <div class="rounded-xl border border-cyan-400/40 bg-cyan-500/10 p-3 space-y-2 ui-panel">
-                <p class="text-xs text-cyan-100">
-                  Choose the parent item for "{editableItems[receiptEditingIndex].name || `Item ${receiptEditingIndex + 1}`}".
-                </p>
-                <div class="space-y-2 max-h-52 overflow-y-auto pr-1">
-                  {#each editableItems as item, targetIndex}
-                    {#if targetIndex !== receiptEditingIndex}
-                      <button
-                        class="w-full text-left rounded-xl border border-surface-700/80 bg-surface-900/55 px-3 py-2 modal-list-row"
-                        type="button"
-                        on:click={() => attachEditableItemAsAddon(receiptEditingIndex!, targetIndex)}
-                      >
-                        <div class="flex items-center justify-between gap-3">
-                          <div class="min-w-0">
-                            <div class="font-medium text-white truncate">{item.name || `Item ${targetIndex + 1}`}</div>
-                            <div class="text-xs text-surface-300">
-                              Current total: {formatAmount(pricingPreviewFromEditable(item).grossTotal, receiptCurrencySelection)}
-                            </div>
-                          </div>
-                          <span class="text-xs rounded-lg border border-cyan-400/45 bg-cyan-500/15 px-2 py-1 text-cyan-100">
-                            Attach
-                          </span>
-                        </div>
-                      </button>
-                    {/if}
-                  {/each}
-                </div>
-                <button class="btn btn-outline w-full" type="button" on:click={closeReceiptAttachModal}>
-                  Cancel
-                </button>
-              </div>
-              {/if}
-              {#if showReceiptItemAddonsModal && receiptItemAddonsIndex === receiptEditingIndex}
-              <div class="rounded-xl border border-surface-700/80 bg-surface-900/55 p-3 space-y-3 ui-panel">
-                <p class="text-xs text-surface-300">
-                  Add-on costs are per item and rolled into this item total.
-                </p>
-                <div class="space-y-2 max-h-56 overflow-y-auto pr-1">
-                  {#if (editableItems[receiptEditingIndex].addons || []).length === 0}
-                    <div class="text-xs text-surface-400">
-                      No add-ons yet. Add one below if needed.
-                    </div>
-                  {/if}
-                  {#each editableItems[receiptEditingIndex].addons || [] as addon, addonIdx}
-                    <div class="rounded-xl border border-surface-700/80 bg-surface-900/55 p-2 modal-list-row space-y-2">
-                      <div class="grid grid-cols-[1fr_7rem] gap-2 items-center">
-                        <input
-                          class="input w-full"
-                          value={addon.name}
-                          placeholder="Add-on"
-                          on:input={(event) => updateEditableItemAddon(receiptEditingIndex!, addonIdx, 'name', (event.target as HTMLInputElement).value)}
-                        />
-                        <input
-                          class="input w-full text-right"
-                          value={addon.price}
-                          placeholder={zeroPlaceholderByCurrency(receiptCurrencySelection)}
-                          inputmode="decimal"
-                          type="number"
-                          min="0"
-                          step={1 / factorFor(receiptCurrencySelection)}
-                          on:input={(event) => updateEditableItemAddon(receiptEditingIndex!, addonIdx, 'price', (event.target as HTMLInputElement).value)}
-                        />
-                      </div>
-                      <div class="flex items-center justify-end gap-2 flex-wrap">
-                        <button
-                          class="action-btn action-btn-surface action-btn-compact"
-                          type="button"
-                          title="Create a standalone item from this add-on"
-                          on:click={() => promoteEditableItemAddonToItem(receiptEditingIndex!, addonIdx)}
-                        >
-                          Create item
-                        </button>
-                        <button
-                          class="action-btn action-btn-danger action-btn-compact"
-                          type="button"
-                          title="Remove add-on"
-                          on:click={() => removeEditableItemAddon(receiptEditingIndex!, addonIdx)}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    </div>
-                  {/each}
-                </div>
-                <button class="btn btn-outline w-full" type="button" on:click={() => addEditableItemAddon(receiptEditingIndex!)}>
-                  Add Add-on
-                </button>
-                <div class="rounded-lg border border-surface-700 bg-surface-900/60 px-3 py-2 text-sm flex items-center justify-between ui-inline-metric">
-                  <span class="text-surface-300">Add-on total per item</span>
-                  <span class="font-semibold text-white">
-                    {formatAmount(editableItemAddonTotalCents(receiptEditingIndex!), receiptCurrencySelection)}
-                  </span>
-                </div>
-                <div class="rounded-lg border border-surface-700 bg-surface-900/60 px-3 py-2 text-sm flex items-center justify-between ui-inline-metric">
-                  <span class="text-surface-300">
-                    Add-on total ({Math.max(1, Number.parseInt(editableItems[receiptEditingIndex].quantity || '1', 10) || 1)} item{Math.max(1, Number.parseInt(editableItems[receiptEditingIndex].quantity || '1', 10) || 1) === 1 ? '' : 's'})
-                  </span>
-                  <span class="font-semibold text-white">
-                    {formatAmount(editableItemAddonExtendedTotalCents(receiptEditingIndex!), receiptCurrencySelection)}
-                  </span>
-                </div>
-                <div class="flex gap-3 modal-actions">
-                  <button
-                    class="btn btn-outline w-full"
-                    type="button"
-                    on:click={() => {
-                      showReceiptItemAddonsModal = false;
-                      receiptItemAddonsIndex = null;
-                    }}
-                  >
-                    Close
-                  </button>
-                  <button
-                    class="btn btn-primary w-full"
-                    type="button"
-                    on:click={() => {
-                      showReceiptItemAddonsModal = false;
-                      receiptItemAddonsIndex = null;
-                    }}
-                  >
-                    Done
-                  </button>
-                </div>
-              </div>
-              {/if}
-              <div class="flex gap-3 modal-actions">
-                <button class="btn btn-outline w-full" type="button" on:click={closeReceiptItemEditor}>
-                  Done
-                </button>
-              </div>
-            </div>
-          </div>
-        {/if}
         <div class="border border-surface-800 rounded-xl p-4 space-y-3 ui-panel">
           <div class="flex items-center justify-between gap-3">
             <div>
