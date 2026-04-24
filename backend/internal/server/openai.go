@@ -23,13 +23,11 @@ const (
 	geminiModelRetryFallback = "gemini-2.5-flash-lite"
 
 	// Tuned from live hard/simple receipt runs.
-	// Retry uses thinkingLevel=LOW which consumes some of the output budget for
-	// reasoning, AND a strict response schema. The cap must accommodate both
-	// the thinking and the full JSON for long receipts; the previous 4000 cap
-	// frequently truncated mid-JSON on receipts with many items, especially
-	// when fallback to flash-lite kicked in.
+	// Retry uses thinkingLevel=MEDIUM which consumes a meaningful chunk of the
+	// output budget for reasoning, AND a strict response schema. The cap must
+	// accommodate both the thinking and the full JSON for long receipts.
 	geminiReceiptMaxOutputTokensStandard = 6800
-	geminiReceiptMaxOutputTokensRetry    = 12000
+	geminiReceiptMaxOutputTokensRetry    = 24000
 	geminiReceiptTemperatureStandard     = 0.0
 	geminiReceiptTemperatureRetry        = 0.0
 )
@@ -544,7 +542,7 @@ func buildGeminiRequest(image []byte, contentType, model string, temperature flo
 	if isGeminiRetryModel(model) {
 		generationConfig["response_schema"] = geminiReceiptResponseSchema()
 		generationConfig["thinkingConfig"] = map[string]any{
-			"thinkingLevel": "LOW",
+			"thinkingLevel": "MEDIUM",
 		}
 	} else {
 		generationConfig["thinkingConfig"] = map[string]any{

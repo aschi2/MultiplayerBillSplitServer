@@ -33,7 +33,7 @@ Load this file only for receipt-import/parser/model tasks.
 - Do not assume newer/more expensive model tiers OCR this receipt format better.
 - Prefer sending a single image when possible; use prompt/parsing improvements before adding multi-image transformations.
 - Standard parse output cap is `max_output_tokens=6800`, targeting ~25% usage (75% headroom) on the hard benchmark receipt while avoiding oversized token ceilings.
-- Retry/high-accuracy parse output cap is `max_output_tokens=12000`. Retry uses `thinkingLevel=LOW` which consumes part of the output budget; a tighter cap (previously 4000) truncated JSON mid-output on receipts with many items, especially when fallback to flash-lite kicked in.
+- Retry/high-accuracy parse uses `thinkingLevel=MEDIUM` and `max_output_tokens=24000`. Medium thinking consumes a meaningful share of the output budget for reasoning, so the cap is sized to leave plenty of room for the structured JSON on long receipts. Earlier tighter caps (4000, 12000) truncated JSON mid-output.
 - Keep decode temperature low (`0.0`). Recent regressions on photographed long receipts were not fixed by temperature changes; prompt/flow quality mattered more.
 - Avoid overloading the parse prompt with too many modifier-heavy edge-case rules. A shorter prompt that defaults to "each priced pre-total row is a standalone item unless clearly subordinate" performed better on simple receipts without hurting the hard benchmark.
 - Tip parsing now relies on prompt guardrails only; do not apply deterministic post-parse clearing of `tip_cents`/`total_cents` based on suggested-tip percentages.
