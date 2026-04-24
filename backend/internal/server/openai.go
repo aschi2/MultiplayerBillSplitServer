@@ -545,8 +545,12 @@ func buildGeminiRequest(image []byte, contentType, model string, temperature flo
 			"thinkingLevel": "MEDIUM",
 		}
 	} else {
+		// Dynamic thinking: model spends minimal tokens on simple receipts
+		// and ramps up reasoning for harder ones. Goal is for flash-lite to
+		// handle ~95% of receipts on the first parse without needing the
+		// retry path.
 		generationConfig["thinkingConfig"] = map[string]any{
-			"thinkingBudget": 0,
+			"thinkingBudget": -1,
 		}
 	}
 	body := map[string]any{
